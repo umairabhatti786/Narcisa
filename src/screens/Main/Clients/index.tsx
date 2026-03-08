@@ -110,7 +110,6 @@ const ClientsScreen = ({ navigation }: any) => {
           </CustomButtom>
         </View>
         <View style={styles.line} />
-
         <FlatList
           data={ClientData}
           style={{ padding: sizeHelper.calWp(35) }}

@@ -43,6 +43,9 @@ const CustomInput = ({
   leftSource,
   rightSourceSize,
   editable,
+  tintColor,
+  textTransform,
+  lablelfontWeight
 }: InputProps) => {
 
   
@@ -61,10 +64,13 @@ const CustomInput = ({
         >
           <CustomText
             text={label}
-            fontWeight="700"
+            fontWeight={lablelfontWeight || "700"}
             size={21}
             color={colors.text_grey}
             fontFam={fonts.Inter_Bold}
+            style={{
+            textTransform:textTransform
+            }}
           />
         </View>
       )}
@@ -88,7 +94,7 @@ const CustomInput = ({
             style={{
               width: sizeHelper.calWp(35),
               height: sizeHelper.calWp(35),
-              tintColor: colors.text_grey
+              tintColor:tintColor||  colors.black
             }}
             resizeMode={"contain"}
           />

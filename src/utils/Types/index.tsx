@@ -17,6 +17,7 @@ export type TextType = {
   textDecorationLine?: string;
   label?: any;
   textTransform?: any;
+  textAlign?: any;
 };
 //  Custom button props
 
@@ -71,10 +72,13 @@ export type InputProps = {
   onFocus?: any;
   disable?: boolean;
   fontFamily?: any;
-  rightSource?:any
-  onRightSource?:any
-  leftSource?:any
-  rightSourceSize?:any
+  rightSource?: any
+  onRightSource?: any
+  leftSource?: any
+  rightSourceSize?: any
+  tintColor?: any
+  textTransform?: any
+  lablelfontWeight?: any
 };
 
 

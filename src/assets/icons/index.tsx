@@ -22,6 +22,11 @@ export const icons = {
     schedule:require("../icons/schedule.png"),
     menu:require("../icons/menu.png"),
     staff:require("../icons/staff.png"),
+    dollar:require("../icons/dollar.png"),
+    duration:require("../icons/duration.png"),
+    tags:require("../icons/tags.png"),
+    star:require("../icons/star.png"),
+    calendar:require("../icons/calendar.png"),
    
    
 

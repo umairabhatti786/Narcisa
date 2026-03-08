@@ -197,7 +197,7 @@ const BottomTab = ({ navigation }: any) => {
           headerShown: false,
           tabBarIcon: ({ focused }) => {
             return (
-              <TabItem title={"STAFF"} img={icons.service} focused={focused} />
+              <TabItem title={"STAFF"} img={icons.staff} focused={focused} />
             );
           },
         }}
