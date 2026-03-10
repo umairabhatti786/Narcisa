@@ -9,39 +9,41 @@ import { colors } from "../../../utils/Themes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SplashScreen = ({ navigation }: any) => {
-    const insets = useSafeAreaInsets();
-  
+  const insets = useSafeAreaInsets();
+
   useEffect(() => {
     setTimeout(() => {
-      navigation.navigate("LoginScreen")
+      navigation.navigate("LoginScreen");
     }, 3000);
   }, []);
 
   return (
     <>
-          <StatusBar barStyle={"dark-content"} backgroundColor={"#ffff"} />
-    
-      <View
-      style={{flex:1}}
-      >
-        <View style={{ flex: 1,alignItems:"center",justifyContent:"center" }}>
+      <StatusBar barStyle={"dark-content"} backgroundColor={"#ffff"} />
+
+      <View style={{ flex: 1 }}>
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
           <Image style={styles.splash_background} source={images.shadow_logo} />
         </View>
 
-        <View style={{paddingBottom:sizeHelper.calHp(70),
-          bottom:
-                    Platform.OS == "ios"
-                      ? 0
-                      : insets.bottom <= 16
-                      ? insets.bottom - insets.bottom
-                      : insets.bottom,
-        
-
-        }}>
+        <View
+          style={{
+            paddingBottom: sizeHelper.calHp(70),
+            bottom:
+              Platform.OS == "ios"
+                ? 0
+                : insets.bottom <= 16
+                ? insets.bottom - insets.bottom
+                : insets.bottom,
+                alignItems:"center"
+          }}
+        >
           <CustomText
             text={`POWERED BY NARCISA`}
             size={22}
-            style={{textAlign:"center"}}
+            style={{ textAlign: "center" }}
             fontFam={fonts.InterTight_Bold}
             color={colors.text_grey}
             fontWeight={"700"}

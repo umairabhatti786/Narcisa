@@ -156,15 +156,15 @@ const CustomInput = ({
         )}
       </View>
 
-      {/* {error && (
+      {error && (
         <View
           style={{
             marginTop: sizeHelper.calHp(10),
             alignItems:"flex-end"
           }}>
-          <CustomText size={20} text={error} color={theme.colors.red} />
+          <CustomText size={20} text={error} color={colors.red} />
         </View>
-      )} */}
+      )} 
     </View>
   );
 };

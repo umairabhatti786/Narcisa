@@ -26,7 +26,8 @@ export const ApiServices = {
 
     callback({
       isSuccess: true,
-      response: data
+      response: data,
+      status:response.status
     });
 
   } catch (error) {
@@ -35,7 +36,8 @@ export const ApiServices = {
 
     callback({
       isSuccess: false,
-      response: error
+      response: error,
+      
     });
 
   }
