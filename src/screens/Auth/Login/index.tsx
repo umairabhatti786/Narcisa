@@ -8,6 +8,7 @@ import {
   BackHandler,
   Image,
 } from "react-native";
+import { Snackbar } from 'react-native-paper'
 import sizeHelper from "../../../utils/Helpers";
 import ScreenLayout from "../../../components/ScreenLayout";
 import CustomText from "../../../components/Text";
@@ -22,15 +23,99 @@ import BackArrow from "../../../assets/svgs/backArrow.svg";
 import { CommonActions } from "@react-navigation/native";
 import { colors } from "../../../utils/Themes";
 import { images } from "../../../assets/images";
+import { emailRegex } from "../../../utils/Regex";
+import { ApiServices } from "../../../api/ApiServices";
+import CustomToast from "../../../components/CustomToast";
 
 const LoginScreen = ({ navigation }: any) => {
-  const [showPassowrd, setShowPassowrd] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isMessage, setIsMessage] = useState<any>(false);
+  const [message, setMessage] = useState<any>("");
+  const [toastColor, setToastColor] = useState(colors.red)
   console.log("ckdnkdnc", navigation);
 
+  const validateEmail = (value: any) => {
+    setEmail(value)
+    if (value.trim() === '') {
+      setEmailError("Email is required");
+    } else if (!emailRegex.test(value.trim())) {
+      setEmailError("Invalid email format")
+    } else {
+      setEmailError("");
+    }
+  }
+  const PasswordLength = (value: any) => {
+    setPassword(value);
+    if (value.trim() === "") {
+      setPasswordError("Password is Required")
+    }
+    else {
+      setPasswordError("")
+    }
+  }
+  const saveData = () => {
+    if (email.trim() === "") {
+      setEmailError("Email is required");
+      setPasswordError("");
+      return;
+    }
+
+    let valid = true;
+
+    if (!emailRegex.test(email.trim())) {
+      setEmailError("Invalid email format");
+      valid = false;
+    } else {
+      setEmailError("");
+    }
+
+    if (password.trim() === "") {
+      setPasswordError("Password is required");
+      valid = false;
+    } else {
+      setPasswordError("");
+    }
+
+    if (!emailRegex.test(email.trim())) {
+      setMessage("Invalid credentials");
+      setToastColor(colors.red);
+      setIsMessage(true);
+      return;
+    }
+
+    const raw = JSON.stringify({
+      email: email,
+      password: password
+    });
+
+    const param = { raw };
+
+    ApiServices.Login(param, ({ isSuccess, response }: any) => {
+      console.log("FULL RESPONSE:", response);
+
+      if (isSuccess && response.success) {
+        setMessage("Login Success");
+        setIsMessage(true);
+        setToastColor(colors.green);
+
+        setTimeout(() => {
+          navigation.navigate("AppStack");
+        }, 1000);
+      } else {
+        setMessage(response?.message?.info || "Invalid credentials");
+        setIsMessage(true);
+        setToastColor(colors.red);
+      }
+    });
+  };
   return (
     <>
       <ScreenLayout
-      backgroundColor={colors.background}
+        backgroundColor={colors.background}
       >
         <Pressable
           onPress={() => Keyboard.dismiss()}
@@ -55,18 +140,60 @@ const LoginScreen = ({ navigation }: any) => {
             fontWeight={"600"}
           />
 
-          <CustomInput leftSource={icons.email} placeholder="demo@narcisa.rs" />
-          <CustomInput
-            leftSource={icons.password}
-            placeholder="password"
-            secureTextEntry={showPassowrd}
-            rightSource={showPassowrd ? icons.eye_off : icons.eye}
-            onRightSource={() => setShowPassowrd(!showPassowrd)}
-          />
-
+          <View>
+            <CustomInput
+              leftSource={icons.email}
+              placeholder="demo@narcisa.rs"
+              onChangeText={(text: any) => {
+                setEmail(text)
+                if (text && !emailRegex.test(text)) {
+                  setEmailError("Invalid email format")
+                } else (
+                  setEmailError("")
+                )
+              }
+              } />
+            {
+              emailError ? (
+                <CustomText
+                  text={emailError}
+                  size={24}
+                  color={colors.red}
+                // style={{
+                //   marginTop:sizeHelper.calHp(10)
+                // }}
+                />)
+                : null
+            }
+          </View>
+          <View>
+            <CustomInput
+              leftSource={icons.password}
+              placeholder="password"
+              onChangeText={(text: any) => {
+                setPassword(text)
+                setPasswordError("")
+              }}
+              secureTextEntry={showPassword}
+              rightSource={showPassword ? icons.eye_off : icons.eye}
+              onRightSource={() => setShowPassword(!showPassword)}
+            />
+            {
+              passwordError ? (
+                <CustomText
+                  text={passwordError}
+                  size={24}
+                  color={colors.red}
+                // style={{
+                //   marginTop:sizeHelper.calHp(10)
+                // }}
+                />
+              ) : null
+            }
+          </View>
           <TouchableOpacity
             style={{ alignItems: "flex-end" }}
-            // onPress={() => navigation.navigate("ForgotPasswordScreen")}
+          // onPress={() => navigation.navigate("ForgotPasswordScreen")}
           >
             <CustomText
               text={"Forgot Password?"}
@@ -79,14 +206,7 @@ const LoginScreen = ({ navigation }: any) => {
 
           <CustomButtom
             //   textColor={theme.colors.white}
-              onPress={() => {
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: "AppStack" }], // or AuthStack
-                  })
-                );
-              }}
+            onPress={saveData}
             width={"100%"}
           >
             <View style={{ ...appStyles.row, gap: sizeHelper.calWp(20) }}>
@@ -103,7 +223,7 @@ const LoginScreen = ({ navigation }: any) => {
                 style={{
                   width: sizeHelper.calWp(25),
                   height: sizeHelper.calWp(25),
-                  marginTop:sizeHelper.calHp(8)
+                  marginTop: sizeHelper.calHp(8)
                 }}
                 resizeMode={"contain"}
               />
@@ -157,9 +277,9 @@ const LoginScreen = ({ navigation }: any) => {
               <CustomInput
                 label="Password"
                 borderRadius={999}
-                secureTextEntry={showPassowrd}
-                onRightSource={() => setShowPassowrd(!showPassowrd)}
-                rightSource={!showPassowrd ? icons.eye : icons.eye_off}
+                secureTextEntry={showPassword}
+                onRightSource={() => setShowPassword(!showPassword)}
+                rightSource={!showPassword ? icons.eye : icons.eye_off}
                 placeholder="Password"
               />
 
@@ -268,8 +388,14 @@ const LoginScreen = ({ navigation }: any) => {
               </View>
             </View>
           </View> */}
+          <CustomToast
+            isVisable={isMessage}
+            setIsVisable={setIsMessage}
+            message={message}
+            backgroundColor={toastColor}
+          />
         </Pressable>
-      </ScreenLayout>
+      </ScreenLayout >
     </>
   );
 };
