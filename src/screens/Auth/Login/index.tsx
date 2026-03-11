@@ -21,6 +21,8 @@ import { emailRegex } from "../../../utils/Regex";
 import { ApiServices } from "../../../api/ApiServices";
 import CustomToast from "../../../components/CustomToast";
 import ScreenLoader from "../../../components/ScreenLoader";
+import { useDispatch } from "react-redux";
+import { setAuthToken } from "../../../redux/reducers/authReducer";
 
 interface LoginValues {
   email: string;
@@ -35,6 +37,7 @@ const LoginScreen = ({ navigation }: any) => {
   const [message, setMessage] = useState<string>("");
   const [toastColor, setToastColor] = useState(colors.red);
   const [loading, setLoading] = useState<boolean>(false);
+  const dispatch=useDispatch()
 
   const [values, setValues] = useState<LoginValues>({
     email: "",
@@ -110,6 +113,7 @@ const LoginScreen = ({ navigation }: any) => {
           setTimeout(() => {
             navigation.navigate("AppStack");
             setLoading(false);
+            dispatch(setAuthToken(response?.message?.token))
           }, 500);
         }
 

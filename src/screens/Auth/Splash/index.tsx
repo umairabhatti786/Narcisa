@@ -7,13 +7,30 @@ import CustomText from "../../../components/Text";
 import { fonts } from "../../../utils/Themes/fonts";
 import { colors } from "../../../utils/Themes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSelector } from "react-redux";
+import { getToken } from "../../../redux/reducers/authReducer";
+import { CommonActions } from "@react-navigation/native";
 
 const SplashScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
+  const token = useSelector(getToken);
+  console.log("token", token);
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+
+  //     navigation.navigate("LoginScreen");
+  //   }, 3000);
+  // }, []);
 
   useEffect(() => {
     setTimeout(() => {
-      navigation.navigate("LoginScreen");
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: token ? "AppStack" : "LoginScreen" }],
+        }),
+      );
     }, 3000);
   }, []);
 
@@ -37,7 +54,7 @@ const SplashScreen = ({ navigation }: any) => {
                 : insets.bottom <= 16
                 ? insets.bottom - insets.bottom
                 : insets.bottom,
-                alignItems:"center"
+            alignItems: "center",
           }}
         >
           <CustomText

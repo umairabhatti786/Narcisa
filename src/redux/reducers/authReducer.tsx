@@ -4,8 +4,6 @@ import { RootState } from "../store";
 export interface AuthState {
   user: any;
   authToken: any;
-
-
 }
 export const initialState: AuthState = {
   user: {},
@@ -15,7 +13,6 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-  
     setAuthData: (state, { payload }: PayloadAction<any>) => {
       state.user = payload;
     },
@@ -25,9 +22,7 @@ const authSlice = createSlice({
   },
 });
 
-export const {setAuthData,setAuthToken} = authSlice.actions;
+export const { setAuthData, setAuthToken } = authSlice.actions;
 export default authSlice.reducer;
 export const getToken = (state: RootState) => state?.auth.authToken;
 export const getAuthData = (state: RootState) => state?.auth.user;
-
-

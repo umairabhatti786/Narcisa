@@ -16,7 +16,7 @@ import { images } from "../../assets/images";
 import { icons } from "../../assets/icons";
 import { colors } from "../../utils/Themes";
 
-const ClientCard = ({ item,onEdit }: any) => {
+const ClientCard = ({ item, onEdit }: any) => {
   const navigation = useNavigation();
   return (
     <>
@@ -39,17 +39,17 @@ const ClientCard = ({ item,onEdit }: any) => {
           <View style={{ ...appStyles.row, gap: sizeHelper.calWp(30) }}>
             <TouchableOpacity style={styles.circle}>
               <CustomText
-                text={item?.short_name}
+                text={`${(item?.name).charAt(0).toUpperCase()} ${(item?.lastName).charAt(0).toUpperCase()}`}
                 fontWeight="700"
                 fontFam={fonts.Inter_Bold}
                 color={colors.primary}
-                size={27}
+                size={26}
               />
             </TouchableOpacity>
 
             <View>
               <CustomText
-                text={item?.name}
+                text={`${item?.name} ${item?.lastName}`}
                 fontWeight="700"
                 fontFam={fonts.Inter_Bold}
                 color={colors.black}
@@ -57,11 +57,11 @@ const ClientCard = ({ item,onEdit }: any) => {
               />
 
               <CustomText
-                text={item?.time}
+                text={item?.email}
                 fontWeight="600"
                 fontFam={fonts.Inter_Medium}
                 color={colors.text_grey}
-                size={25}
+                size={24}
               />
             </View>
           </View>
@@ -96,9 +96,7 @@ const ClientCard = ({ item,onEdit }: any) => {
               <Image style={styles.actionIcon} source={icons.message} />
             </TouchableOpacity>
 
-            <TouchableOpacity 
-            onPress={onEdit}
-            style={styles.actionsBox}>
+            <TouchableOpacity onPress={onEdit} style={styles.actionsBox}>
               <Image style={styles.actionIcon} source={icons.edit} />
             </TouchableOpacity>
 
@@ -109,24 +107,7 @@ const ClientCard = ({ item,onEdit }: any) => {
             </TouchableOpacity>
           </View>
 
-          <View>
-            <CustomText
-              text={"Total Revenue"}
-              fontWeight="700"
-              fontFam={fonts.Inter_Bold}
-              color={colors.text_grey}
-              size={25}
-            />
-
-            <CustomText
-              text={item?.price}
-              style={{ textAlign: "right" }}
-              fontWeight="600"
-              fontFam={fonts.Inter_Bold}
-              color={colors.primary}
-              size={30}
-            />
-          </View>
+         
         </View>
       </View>
     </>
