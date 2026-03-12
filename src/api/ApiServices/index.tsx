@@ -95,4 +95,33 @@ export const ApiServices = {
       });
     }
   },
+
+  GetStaff: async (token: any, callback: any) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+  myHeaders.append("Authorization", `Bearer ${token}`);
+
+  const requestOptions = {
+    method: "GET",
+    headers: myHeaders,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch("https://narcisa.smileapps.net/mapi/workers", requestOptions);
+    const data = await response.json();
+
+    callback({
+      isSuccess: true,
+      response: data,
+      status: response.status,
+    });
+  } catch (error) {
+    console.log("Staff API ERROR:", error);
+    callback({
+      isSuccess: false,
+      response: error,
+    });
+  }
+},
 };

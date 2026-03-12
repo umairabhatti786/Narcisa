@@ -12,20 +12,22 @@ import {
   REGISTER,
 } from 'redux-persist';
 
-import rootReducer from '../reducers/rootReducer';
+import authReducer from '../reducers/authReducer';
 
-// 🔹 Persist only cart
+// 🔹 Store configuration
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth'], // 👈 only cart reducer will persist
+  whitelist: ['auth'],
 };
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const persistedReducer = persistReducer(persistConfig, authReducer);
 
 export const store = configureStore({
-  reducer: persistedReducer,
-  middleware: getDefaultMiddleware =>
+  reducer: {
+    auth: persistedReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],

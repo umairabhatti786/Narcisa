@@ -53,7 +53,7 @@ const StaffCard = ({ item, isAway }: any) => {
                         />
                         <View>
                             <CustomText
-                                text={item?.name}
+                                text={`${item.firstName} ${item.lastName}`}
                                 fontWeight="700"
                                 fontFam={fonts.Inter_Bold}
                                 color={colors.black}
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: sizeHelper.calHp(0),
         right: sizeHelper.calWp(0),
-        backgroundColor:colors.light_blue,
-        alignItems:'center',
-        justifyContent:'center',
-        width:sizeHelper.calWp(100),
-        height:sizeHelper.calWp(50),
-        borderTopRightRadius:sizeHelper.calWp(30),
-        borderBottomLeftRadius:sizeHelper.calWp(50)
+        backgroundColor: colors.light_blue,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: sizeHelper.calWp(100),
+        height: sizeHelper.calWp(50),
+        borderTopRightRadius: sizeHelper.calWp(30),
+        borderBottomLeftRadius: sizeHelper.calWp(50)
     }
 });
