@@ -64,7 +64,7 @@ const CustomBottomSheet = (props: any) => {
     >
       <BottomSheetScrollView 
     scrollEnabled={scrollEnabled}
-    
+    nestedScrollEnabled={true}
       showsVerticalScrollIndicator={false}>
         <SafeAreaView>
           <View style={{ paddingBottom: 30 }}>{children}</View>

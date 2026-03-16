@@ -1,5 +1,5 @@
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "react-native-modal";
 import sizeHelper, { screenWidth } from "../../../utils/Helpers";
 import { appStyles } from "../../../utils/GlobalStyles";
@@ -31,15 +31,17 @@ const EditClientModal = ({
   modalVisible,
   setModalVisible,
   onGetClient,
+  selectedClient,
+  setSelectedClient,
 }: any) => {
   const [value, setValue] = useState<ClientValue>({
-    firstName: "",
+    firstName: selectedClient?.name ? selectedClient?.name : "",
     firstNameError: "",
-    lastName: "",
+    lastName: selectedClient?.lastName ? selectedClient?.lastName : "",
     lastNameError: "",
-    phone: "",
+    phone: selectedClient?.phone ? selectedClient?.phone : "",
     phoneError: "",
-    email: "",
+    email: selectedClient?.email ? selectedClient?.email : "",
     emailError: "",
   });
 
@@ -48,7 +50,21 @@ const EditClientModal = ({
   const [toastColor, setToastColor] = useState(colors.red);
   const [isMessage, setIsMessage] = useState(false);
   const token = useSelector(getToken);
+  console.log("selectedClient", selectedClient);
 
+  useEffect(() => {
+    if(modalVisible){
+        setValue((prev) => ({
+      ...prev,
+      firstName: selectedClient?.name ? selectedClient?.name : "",
+      lastName: selectedClient?.lastName ? selectedClient?.lastName : "",
+      phone: selectedClient?.phone ? selectedClient?.phone : "",
+      email: selectedClient?.email ? selectedClient?.email : "",
+    }));
+
+    }
+  
+  }, [modalVisible]);
   const OnSave = () => {
     const firstName = value?.firstName?.trim();
     const lastName = value?.lastName?.trim();
@@ -93,6 +109,7 @@ const EditClientModal = ({
         email: email,
       }),
       token: token,
+      id:selectedClient?.id
     };
 
     ApiServices.CreateClient(param, ({ isSuccess, response, status }: any) => {
@@ -114,8 +131,8 @@ const EditClientModal = ({
       }
 
       if (status == 200) {
-        setToastColor(colors.green);
-        setMessage("Client Created Successfully");
+        setToastColor(colors.primary);
+        setMessage(selectedClient?.id?"Client Update Successfully": "Client Added Successfully");
         setIsMessage(true);
         setTimeout(() => {
           setModalVisible(false);
@@ -148,8 +165,14 @@ const EditClientModal = ({
       <Modal
         isVisible={modalVisible}
         deviceWidth={screenWidth}
-        onBackButtonPress={() => setModalVisible?.(false)}
-        onBackdropPress={() => setModalVisible?.(false)}
+        onBackButtonPress={() => {
+          setModalVisible?.(false);
+          setSelectedClient?.({});
+        }}
+        onBackdropPress={() => {
+          setModalVisible?.(false);
+          setSelectedClient?.({});
+        }}
         backdropColor="rgba(0,0,0,0.5)"
         style={{ flex: 1 }}
       >
@@ -157,14 +180,22 @@ const EditClientModal = ({
           <View style={appStyles.rowjustify}>
             <View>
               <CustomText
-                text={"Edit Client"}
+                text={
+                  Object.keys(selectedClient).length > 0
+                    ? "Edit Client"
+                    : "Add Client"
+                }
                 fontWeight="700"
                 fontFam={fonts.Inter_Bold}
                 color={colors.black}
                 size={35}
               />
               <CustomText
-                text={"Update client details"}
+                text={
+                  Object.keys(selectedClient).length > 0
+                    ? "Update client details"
+                    : "Add client details"
+                }
                 fontWeight="600"
                 fontFam={fonts.Inter_Medium}
                 color={colors.text_grey}
@@ -173,9 +204,9 @@ const EditClientModal = ({
             </View>
             <TouchableOpacity
               onPress={() => {
-                setModalVisible(false)
-                          setValue({} as ClientValue);
-
+                setModalVisible(false);
+                setValue({} as ClientValue);
+                setSelectedClient({});
               }}
               style={appStyles.circle}
             >

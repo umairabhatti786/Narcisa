@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View, TouchableOpacity, Image, Platform, FlatList } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Image,
+  Platform,
+  FlatList,
+} from "react-native";
 import ScreenLayout from "../../../components/ScreenLayout";
 import CustomBottomSheet from "../../../components/CustomBottomSheet";
 import CustomInput from "../../../components/Input";
@@ -15,13 +22,44 @@ import { fonts } from "../../../utils/Themes/fonts";
 import { CommonActions } from "@react-navigation/native";
 import HomeHeader from "../../../components/HomeHeader";
 import ServiceCard from "../../../components/ServiceCard";
+import Dropdown from "../../../components/CustomDropDown";
+import { useSelector } from "react-redux";
+import { getToken } from "../../../redux/reducers/authReducer";
+import { ApiServices } from "../../../api/ApiServices";
+import AddServiceBottomSheet from "./AddServiceBottomSheet";
+import ScreenLoader from "../../../components/ScreenLoader";
+import CustomToast from "../../../components/CustomToast";
 
-const ScheduleScreen = ({ navigation, }: any) => {
+const ScheduleScreen = ({ navigation }: any) => {
   const addScheduleSheetRef = useRef<any>(null);
   const addScheduleSheetRefSnapPoints = useMemo(() => ["80%", "80%"], []);
   const insets = useSafeAreaInsets();
-  const [modalVisible, setModalVisible] = useState(true)
+  const [modalVisible, setModalVisible] = useState(true);
   const [selected, setSelected] = useState("All");
+  const token = useSelector(getToken);
+  const [serviceGroup, setServiceGroup] = useState([]);
+  const [selectedService, setSelectedService] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("");
+    const [toastColor, setToastColor] = useState(colors.red);
+    const [isMessage, setIsMessage] = useState(false);
+
+  useEffect(() => {
+    fetchServiceGroup();
+  }, []);
+  console.log("serviceGroup", serviceGroup);
+  const fetchServiceGroup = () => {
+    ApiServices.GetServiceGroup(
+      token,
+      ({ isSuccess, response, status }: any) => {
+        if (isSuccess && status === 200) {
+          setServiceGroup(response?.message?.data || []);
+        } else {
+          console.log("Staff API Error", response);
+        }
+      },
+    );
+  };
 
   const categories = [
     { id: 1, name: "All" },
@@ -30,13 +68,14 @@ const ScheduleScreen = ({ navigation, }: any) => {
     { id: 4, name: "Nails" },
     { id: 5, name: "Massage" },
   ];
+  
   const ServiceData = [
     {
       id: 1,
       Professionname: "Women's Haircut",
       time: "45 mint",
       profession: "Hair",
-      price:'$25.00',
+      price: "$25.00",
     },
 
     {
@@ -44,7 +83,7 @@ const ScheduleScreen = ({ navigation, }: any) => {
       Professionname: "Men's Haircut",
       time: "30 mint",
       profession: "Hair",
-      price:'$12.00',
+      price: "$12.00",
     },
 
     {
@@ -52,7 +91,7 @@ const ScheduleScreen = ({ navigation, }: any) => {
       Professionname: "Blowout",
       time: "30 mint",
       profession: "Hair",
-      price:'$15.00',
+      price: "$15.00",
     },
   ];
   return (
@@ -61,7 +100,7 @@ const ScheduleScreen = ({ navigation, }: any) => {
         <View
           style={{
             padding: sizeHelper.calWp(35),
-            gap: sizeHelper.calHp(20)
+            gap: sizeHelper.calHp(20),
           }}
         >
           <HomeHeader />
@@ -77,13 +116,14 @@ const ScheduleScreen = ({ navigation, }: any) => {
             <TouchableOpacity
               activeOpacity={0.5}
               onPress={() => addScheduleSheetRef.current.present()}
-              style={{
-                // position: "absolute",
-                // right: sizeHelper.calWp(40),
-
-                // bottom: sizeHelper.calHp(120),
-                // backgroundColor:'red'
-              }}
+              style={
+                {
+                  // position: "absolute",
+                  // right: sizeHelper.calWp(40),
+                  // bottom: sizeHelper.calHp(120),
+                  // backgroundColor:'red'
+                }
+              }
             >
               {/* <Shadow
           distance={10} // spread size
@@ -130,8 +170,9 @@ const ScheduleScreen = ({ navigation, }: any) => {
             renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => setSelected(item.name)}
-                style={[styles.catagoryButton,
-                selected === item.name && styles.activebg
+                style={[
+                  styles.catagoryButton,
+                  selected === item.name && styles.activebg,
                 ]}
               >
                 <CustomText
@@ -140,9 +181,7 @@ const ScheduleScreen = ({ navigation, }: any) => {
                   fontWeight="700"
                   color={colors.text_grey}
                   fontFam={fonts.InterTight_Bold}
-                  style={[
-                    selected === item.name && styles.activetext
-                  ]}
+                  style={[selected === item.name && styles.activetext]}
                 />
               </TouchableOpacity>
             )}
@@ -157,139 +196,42 @@ const ScheduleScreen = ({ navigation, }: any) => {
             renderItem={({ item, index }: any) => {
               return (
                 <>
-                  <ServiceCard
-                    item={item}
-                  />
+                  <ServiceCard item={item} />
                 </>
               );
             }}
           />
           <CustomBottomSheet
+            scrollEnabled={true}
             snapPoints={addScheduleSheetRefSnapPoints}
             bottomSheetModalRef={addScheduleSheetRef}
           >
-            <View
-              style={{
-                paddingHorizontal: sizeHelper.calWp(35),
-                gap: sizeHelper.calHp(30),
+            <AddServiceBottomSheet
+              SheetVisible={addScheduleSheetRef}
+              selectedService={selectedService}
+              serviceGroup={serviceGroup}
+              setToastColor={setToastColor}
+              setLoading={setLoading}
+              loading={loading}
+              setMessage={setMessage}
+              setIsMessage={setIsMessage}
+              
+              onGetService={()=>{
 
-                paddingBottom: Platform.OS == "ios"
-                  ? sizeHelper.calHp(30)
-                  : insets.bottom <= 16
-                    ? (insets.bottom - insets.bottom) + sizeHelper.calHp(30)
-                    : insets.bottom
-
+                console.log("clkndknck")
               }}
-            >
-              <View style={appStyles.rowjustify}>
-                <View>
-                  <CustomText
-                    text={"Edit Service"}
-                    fontWeight="700"
-                    fontFam={fonts.Inter_Bold}
-                    color={colors.black}
-                    size={35}
-                  />
-                </View>
-                <TouchableOpacity
-                  onPress={() => addScheduleSheetRef.current?.dismiss()}
-                  style={appStyles.circle}
-                >
-                  <Image
-                    style={{
-                      width: sizeHelper.calWp(25),
-                      height: sizeHelper.calWp(25),
-                    }}
-                    source={icons.cross}
-                  />
-                </TouchableOpacity>
-              </View>
-              <View style={{ height: sizeHelper.calHp(2), backgroundColor: colors.border, width: "100%", marginTop: sizeHelper.calHp(20), marginBottom: sizeHelper.calHp(20) }} />
-              <CustomInput
-                leftSource={icons.service}
-                tintColor={colors.primary}
-                placeholder="Women's Haircut"
-                label="Service Name"
-                fontWeight={"700"}
-                lablelfontWeight={"900"}
-                fontSize={26}
-                textTransform="uppercase"
-                fontFamily={fonts.InterTight_Bold}
-                placeholderTextColor={colors.black}
-                backgroundColor={colors?.background}
-              />
-
-              <View style={appStyles.rowjustify}>
-                <CustomInput
-                  leftSource={icons.dollar}
-                  tintColor={colors.primary}
-                  placeholder="$25.00"
-                  label="Price"
-                  fontWeight={"700"}
-                  lablelfontWeight={"900"}
-                  fontSize={26}
-                  textTransform="uppercase"
-                  fontFamily={fonts.InterTight_Bold}
-                  placeholderTextColor={colors.black}
-                  backgroundColor={colors?.background}
-                  width={"48%"}
-                />
-                <CustomInput
-                  leftSource={icons.duration}
-                  tintColor={colors.primary}
-                  placeholder="45 min"
-                  label="Duration"
-                  fontWeight={"700"}
-                  lablelfontWeight={"900"}
-                  fontSize={26}
-                  textTransform="uppercase"
-                  fontFamily={fonts.InterTight_Bold}
-                  placeholderTextColor={colors.black}
-                  backgroundColor={colors?.background}
-                  width={"48%"}
-                />
-              </View>
-              <CustomInput
-                leftSource={icons.tags}
-                tintColor={colors.primary}
-                placeholder=""
-                label="Category"
-                lablelfontWeight={"900"}
-                textTransform="uppercase"
-                fontFamily={fonts.InterTight_Bold}
-                backgroundColor={colors?.background}
-              />
-
-              <CustomButtom
-                onPress={() => addScheduleSheetRef.current?.dismiss()}
-                width={"100%"}
-              >
-                <View style={{ ...appStyles.row, gap: sizeHelper.calWp(20) }}>
-
-                  <Image
-                    source={icons.changes}
-                    style={{
-                      width: sizeHelper.calWp(35),
-                      height: sizeHelper.calWp(35),
-                      marginTop: sizeHelper.calHp(8)
-                    }}
-                    resizeMode={"contain"}
-                  />
-                  <CustomText
-                    text={"Save Changes"}
-                    color={colors.white}
-                    size={27}
-                    fontWeight={"700"}
-                    fontFam={fonts.Inter_Bold}
-                  />
-                </View>
-              </CustomButtom>
-
-
-            </View>
+            />
           </CustomBottomSheet>
         </View>
       </ScreenLayout>
+
+       {loading && <ScreenLoader />}
+        <CustomToast
+          isVisable={isMessage}
+          setIsVisable={setIsMessage}
+          message={message}
+          backgroundColor={toastColor}
+        />
     </>
   );
 };
@@ -300,22 +242,22 @@ const styles = StyleSheet.create({
   line: {
     width: "120%",
     height: 1,
-    alignSelf: 'center',
+    alignSelf: "center",
     backgroundColor: colors.border,
   },
   catagoryButton: {
     width: sizeHelper.calWp(150),
     height: sizeHelper.calWp(70),
     backgroundColor: colors.light_blue,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: sizeHelper.calWp(20),
-    borderRadius: sizeHelper.calWp(40)
+    borderRadius: sizeHelper.calWp(40),
   },
   activebg: {
-    backgroundColor: colors.primary
+    backgroundColor: colors.primary,
   },
   activetext: {
-    color: colors.white
-  }
+    color: colors.white,
+  },
 });

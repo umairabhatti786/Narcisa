@@ -108,7 +108,7 @@ const LoginScreen = ({ navigation }: any) => {
 
         if (status === 200) {
           setMessage("Successfully Login");
-          setToastColor(colors.green);
+          setToastColor(colors.primary);
           setIsMessage(true);
           setTimeout(() => {
             navigation.navigate("AppStack");

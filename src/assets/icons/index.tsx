@@ -27,7 +27,9 @@ export const icons = {
     tags:require("../icons/tags.png"),
     star:require("../icons/star.png"),
     calendar:require("../icons/calendar.png"),
-   
+    drop_up:require("../icons/drop_up.png"),
+    down_arrow:require("../icons/down_arrow.png"),
+
    
 
 

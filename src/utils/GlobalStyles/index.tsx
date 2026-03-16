@@ -46,4 +46,10 @@ export const appStyles = StyleSheet.create({
     borderRadius: sizeHelper.calWp(80),
     backgroundColor:colors?.light_blue
   },
+
+    line: {
+    width: "100%",
+    height: 1,
+    backgroundColor: colors.border,
+  },
 });

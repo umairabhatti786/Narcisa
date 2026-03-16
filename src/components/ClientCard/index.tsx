@@ -16,7 +16,7 @@ import { images } from "../../assets/images";
 import { icons } from "../../assets/icons";
 import { colors } from "../../utils/Themes";
 
-const ClientCard = ({ item, onEdit }: any) => {
+const ClientCard = ({ item, onEdit,deleteClient,onCall,onMail }: any) => {
   const navigation = useNavigation();
   return (
     <>
@@ -81,7 +81,9 @@ const ClientCard = ({ item, onEdit }: any) => {
         <View style={styles.line} />
         <View style={appStyles.rowjustify}>
           <View style={{ ...appStyles.row, gap: sizeHelper.calWp(25) }}>
-            <TouchableOpacity style={styles.actionsBox}>
+            <TouchableOpacity 
+            onPress={onCall}
+            style={styles.actionsBox}>
               <Image
                 style={{
                   width: sizeHelper.calWp(35),
@@ -92,7 +94,9 @@ const ClientCard = ({ item, onEdit }: any) => {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionsBox}>
+            <TouchableOpacity 
+            onPress={onMail}
+            style={styles.actionsBox}>
               <Image style={styles.actionIcon} source={icons.message} />
             </TouchableOpacity>
 
@@ -101,6 +105,7 @@ const ClientCard = ({ item, onEdit }: any) => {
             </TouchableOpacity>
 
             <TouchableOpacity
+            onPress={deleteClient}
               style={{ ...styles.actionsBox, backgroundColor: "#FFF1F2" }}
             >
               <Image style={styles.actionIcon} source={icons.trash} />

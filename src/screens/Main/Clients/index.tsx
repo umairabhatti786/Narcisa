@@ -6,6 +6,8 @@ import {
   Image,
   FlatList,
   ActivityIndicator,
+  Alert,
+  Linking,
 } from "react-native";
 import ScreenLayout from "../../../components/ScreenLayout";
 import HomeHeader from "../../../components/HomeHeader";
@@ -32,10 +34,13 @@ const ClientsScreen = ({ navigation }: any) => {
   const [toastColor, setToastColor] = useState(colors.red);
   const [isMessage, setIsMessage] = useState(false);
   const [Clients, setClients] = useState([]);
+  const [selectedClient, setSelectedClient] = useState({});
 
   useEffect(() => {
     GetClientData();
   }, []);
+
+  console.log("token", selectedClient);
 
   const GetClientData = () => {
     setLoading(true);
@@ -69,39 +74,86 @@ const ClientsScreen = ({ navigation }: any) => {
     }
   };
 
-  const ClientData = [
-    {
-      id: 1,
-      name: "Jessica Miller",
-      time: "3 days ago",
-      price: "$125.00",
-      short_name: "JM",
-    },
+  const OnDeleteClient = (item: any) => {
+    let params = {
+      token: token,
+      id: item?.id,
+    };
 
-    {
-      id: 2,
-      name: "Emily Johnson",
-      time: "1 week ago",
-      price: "$42.00",
-      short_name: "EJ",
-    },
+    setClients(Clients.filter((it: any) => it.id !== item.id));
 
-    {
-      id: 3,
-      name: "Sarah Davis",
-      time: "Today",
-      price: "$28.00",
-      short_name: "SD",
-    },
+    try {
+      ApiServices.DeleteClients(
+        params,
+        ({ isSuccess, response, status }: any) => {
+          console.log("cdknvkndk", response, status);
+          setLoading(false);
 
-    {
-      id: 5,
-      name: "Katherine Smith",
-      time: "1 month ago",
-      price: "$350.00",
-      short_name: "KS",
-    },
-  ];
+          if (!isSuccess) {
+            console.log("Client--------Api--------Error");
+            return;
+          }
+          if (!response?.success) {
+            setMessage(response?.message?.info || "Something went wrong");
+            setToastColor(colors.red);
+            return;
+          }
+
+          if (status == 200) {
+            // setMessage(response?.message?.info);
+            // setToastColor(colors.green);
+            // setIsMessage(true);
+            return;
+          } else {
+            setMessage(response?.message?.info);
+            setToastColor(colors.red);
+            setIsMessage(true);
+          }
+        },
+      );
+    } catch (error) {
+      console.log("Client--------Api--------Error", error);
+    }
+  };
+
+  const callUser = async (phone: any) => {
+
+     if (!phone) {
+      setMessage("Phone Number Not Exist");
+      setIsMessage(true);
+      setToastColor(colors.red);
+      return;
+    }
+    const phoneNumber = `tel:${phone}`;
+
+    const supported = await Linking.canOpenURL(phoneNumber);
+
+    if (supported) {
+      await Linking.openURL(phoneNumber);
+    } else {
+      Alert.alert("Alert!", "Phone call is not supported on this device");
+    }
+  };
+
+  const sendEmail = async (email: any) => {
+    if (!email) {
+      setMessage("Email Not Exist");
+      setIsMessage(true);
+      setToastColor(colors.red);
+      return;
+    }
+    const emailUrl = `mailto:${email}`;
+
+    Linking.openURL(emailUrl);
+
+    // if (supported) {
+    //   await Linking.openURL(url);
+    // } else {
+    //   Alert.alert("Alert!", "Email is not supported on this device");
+
+    // }
+  };
+
   return (
     <>
       <ScreenLayout style={{ paddingHorizontal: -1, gap: 0 }}>
@@ -199,8 +251,32 @@ const ClientsScreen = ({ navigation }: any) => {
                 return (
                   <>
                     <ClientCard
+                      onCall={() => callUser(item?.phone)}
+                      onMail={() => sendEmail(item?.email)}
+                      onEdit={() => {
+                        console.log("ckdnckdnkcd", item);
+                        setSelectedClient(item);
+                        setIsEditModal(true);
+                      }}
                       item={item}
-                      onEdit={() => setIsEditModal(true)}
+                      deleteClient={() => {
+                        Alert.alert(
+                          `Alert!`,
+                          `Are you sure you want to delete this client.`,
+
+                          [
+                            {
+                              text: `Yes`,
+                              onPress: () => {
+                                OnDeleteClient(item);
+                              },
+                            },
+                            {
+                              text: `No`,
+                            },
+                          ],
+                        );
+                      }}
                     />
                   </>
                 );
@@ -216,6 +292,8 @@ const ClientsScreen = ({ navigation }: any) => {
         backgroundColor={toastColor}
       />
       <EditClientModal
+        selectedClient={selectedClient}
+        setSelectedClient={setSelectedClient}
         modalVisible={isEditModal}
         onGetClient={() => {
           console.log("ckdnbckdbcbd");
