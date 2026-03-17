@@ -6,6 +6,7 @@ import {
   Image,
   Platform,
   FlatList,
+  Alert,
 } from "react-native";
 import ScreenLayout from "../../../components/ScreenLayout";
 import CustomBottomSheet from "../../../components/CustomBottomSheet";
@@ -37,63 +38,106 @@ const ScheduleScreen = ({ navigation }: any) => {
   const [modalVisible, setModalVisible] = useState(true);
   const [selected, setSelected] = useState("All");
   const token = useSelector(getToken);
-  const [serviceGroup, setServiceGroup] = useState([]);
+  const [serviceGroup, setServiceGroup] = useState<any[]>([]);
   const [selectedService, setSelectedService] = useState({});
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
-    const [toastColor, setToastColor] = useState(colors.red);
-    const [isMessage, setIsMessage] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [toastColor, setToastColor] = useState(colors.red);
+  const [isMessage, setIsMessage] = useState(false);
 
   useEffect(() => {
-    fetchServiceGroup();
+    GetServiceData();
   }, []);
-  console.log("serviceGroup", serviceGroup);
-  const fetchServiceGroup = () => {
-    ApiServices.GetServiceGroup(
-      token,
-      ({ isSuccess, response, status }: any) => {
-        if (isSuccess && status === 200) {
-          setServiceGroup(response?.message?.data || []);
-        } else {
-          console.log("Staff API Error", response);
-        }
-      },
-    );
-  };
+  console.log("token", serviceGroup);
 
+  const GetServiceData = () => {
+    setLoading(true);
+
+    try {
+      ApiServices.GetServiceGroup(token, ({ isSuccess, response, status }: any) => {
+        console.log("cdknvkndk", response, status);
+        setLoading(false);
+
+        if (!isSuccess) {
+          console.log("Service--------Api--------Error");
+          return;
+        }
+        if (!response?.success) {
+          setMessage(response?.message?.info || "Something went wrong");
+          setToastColor(colors.red);
+          return;
+        }
+
+        if (status == 200) {
+          setServiceGroup(response?.message?.data);
+          return;
+        } else {
+          setMessage(response?.message?.info);
+          setToastColor(colors.red);
+          setIsMessage(true);
+        }
+      });
+    } catch (error) {
+      console.log("Service--------Api--------Error", error);
+    }
+  };
+  const OnDeleteService = (item: any) => {
+    let params = {
+      token: token,
+      id: item?.id,
+    };
+
+    setServiceGroup(serviceGroup.filter((it: any) => it.id !== item.id));
+
+    try {
+      ApiServices.DeleteService(
+        params,
+        ({ isSuccess, response, status }: any) => {
+          console.log("cdknvkndk", response, status);
+          setLoading(false);
+
+          if (!isSuccess) {
+            console.log("Service--------Api--------Error");
+            return;
+          }
+          if (!response?.success) {
+            setMessage(response?.message?.info || "Something went wrong");
+            setToastColor(colors.red);
+            return;
+          }
+
+          if (status == 200) {
+            // setMessage(response?.message?.info);
+            // setToastColor(colors.green);
+            // setIsMessage(true);
+            return;
+          } else {
+            setMessage(response?.message?.info);
+            setToastColor(colors.red);
+            setIsMessage(true);
+          }
+        },
+      );
+    } catch (error) {
+      console.log("Service--------Api--------Error", error);
+    }
+  };
   const categories = [
     { id: 1, name: "All" },
     { id: 2, name: "Hair" },
     { id: 3, name: "Face" },
     { id: 4, name: "Nails" },
-    { id: 5, name: "Massage" },
+    { id: 5, name: "Ostalo" },
   ];
-  
-  const ServiceData = [
-    {
-      id: 1,
-      Professionname: "Women's Haircut",
-      time: "45 mint",
-      profession: "Hair",
-      price: "$25.00",
-    },
+  const filteredServices = useMemo(() => {
+    if (selected === "All") {
+      return serviceGroup;
+    }
 
-    {
-      id: 2,
-      Professionname: "Men's Haircut",
-      time: "30 mint",
-      profession: "Hair",
-      price: "$12.00",
-    },
-
-    {
-      id: 3,
-      Professionname: "Blowout",
-      time: "30 mint",
-      profession: "Hair",
-      price: "$15.00",
-    },
-  ];
+    return serviceGroup.filter(
+      (item: any) => item?.category?.name === selected
+    );
+  }, [selected, serviceGroup]);
   return (
     <>
       <ScreenLayout>
@@ -165,6 +209,7 @@ const ScheduleScreen = ({ navigation }: any) => {
           </View>
           <FlatList
             data={categories}
+            keyExtractor={(item) => item.id?.toString() || Math.random().toString()} // must be unique
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
@@ -187,16 +232,55 @@ const ScheduleScreen = ({ navigation }: any) => {
             )}
           />
           <FlatList
-            data={ServiceData}
+            data={filteredServices}
             contentContainerStyle={{
               gap: sizeHelper.calWp(30),
               paddingBottom: sizeHelper.calHp(180),
+            }}
+            ListEmptyComponent={() => {
+              return (
+                <View
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingTop: "50%",
+                  }}
+                >
+                  <CustomText
+                    text={"No Service Are Available"}
+                    color={colors.primary}
+                    size={27}
+                    fontWeight={"700"}
+                    fontFam={fonts.Inter_Bold}
+                  />
+                </View>
+              );
             }}
             showsVerticalScrollIndicator={false}
             renderItem={({ item, index }: any) => {
               return (
                 <>
-                  <ServiceCard item={item} />
+                  <ServiceCard
+                    item={item}
+                    deleteService={() => {
+                      Alert.alert(
+                        `Alert!`,
+                        `Are you sure you want to delete this client.`,
+
+                        [
+                          {
+                            text: `Yes`,
+                            onPress: () => {
+                              OnDeleteService(item);
+                            },
+                          },
+                          {
+                            text: `No`,
+                          },
+                        ],
+                      );
+                    }}
+                  />
                 </>
               );
             }}
@@ -206,6 +290,7 @@ const ScheduleScreen = ({ navigation }: any) => {
             snapPoints={addScheduleSheetRefSnapPoints}
             bottomSheetModalRef={addScheduleSheetRef}
           >
+            // ScheduleScreen.tsx
             <AddServiceBottomSheet
               SheetVisible={addScheduleSheetRef}
               selectedService={selectedService}
@@ -215,23 +300,22 @@ const ScheduleScreen = ({ navigation }: any) => {
               loading={loading}
               setMessage={setMessage}
               setIsMessage={setIsMessage}
-              
-              onGetService={()=>{
-
-                console.log("clkndknck")
+              onGetService={(newService: any) => {
+                // local state mein naya service add karo
+                setServiceGroup(prev => [...prev, newService]);
               }}
             />
           </CustomBottomSheet>
         </View>
       </ScreenLayout>
 
-       {loading && <ScreenLoader />}
-        <CustomToast
-          isVisable={isMessage}
-          setIsVisable={setIsMessage}
-          message={message}
-          backgroundColor={toastColor}
-        />
+      {loading && <ScreenLoader />}
+      <CustomToast
+        isVisable={isMessage}
+        setIsVisable={setIsMessage}
+        message={message}
+        backgroundColor={toastColor}
+      />
     </>
   );
 };

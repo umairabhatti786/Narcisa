@@ -200,6 +200,37 @@ const response = await fetch(
       });
     }
   },
+   DeleteService: async (params: any, callback: any) => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", `Bearer ${params?.token}`);
+
+    const requestOptions = {
+      method: "DELETE",
+      headers: myHeaders,
+      redirect: "follow",
+    };
+
+    try {
+      const response = await fetch(getApiUrl(URLS.CLIENTS+`?id=${params?.id}`), requestOptions);
+
+      const data = await response.json();
+      console.log("response", response);
+
+      callback({
+        isSuccess: true,
+        response: data,
+        status: response.status,
+      });
+    } catch (error) {
+      console.log("API ERROR:", error);
+
+      callback({
+        isSuccess: false,
+        response: error,
+      });
+    }
+  },
 
   GetStaff: async (token: any, callback: any) => {
   const myHeaders = new Headers();

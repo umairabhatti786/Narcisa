@@ -16,7 +16,7 @@ import { images } from "../../assets/images";
 import { icons } from "../../assets/icons";
 import { colors } from "../../utils/Themes";
 
-const ServiceCard = ({ item, isAway }: any) => {
+const ServiceCard = ({ item, isAway ,deleteService}: any) => {
     const navigation = useNavigation();
     return (
         <>
@@ -50,7 +50,7 @@ const ServiceCard = ({ item, isAway }: any) => {
                         </View>
                         <View>
                             <CustomText
-                                text={item?.Professionname}
+                                text={item?.serviceName}
                                 fontWeight="700"
                                 fontFam={fonts.Inter_Bold}
                                 color={colors.black}
@@ -68,7 +68,7 @@ const ServiceCard = ({ item, isAway }: any) => {
                                         source={icons.duration}
                                     />
                                     <CustomText
-                                        text={item?.time}
+                                        text={item?.duration?.name}
                                         fontWeight="700"
                                         fontFam={fonts.Inter_Bold}
                                         color={colors.text_grey}
@@ -86,7 +86,7 @@ const ServiceCard = ({ item, isAway }: any) => {
                                         source={icons.tags}
                                     />
                                     <CustomText
-                                        text={item?.profession}
+                                        text={item?.category?.name}
                                         fontWeight="700"
                                         fontFam={fonts.Inter_Bold}
                                         color={colors.text_grey}
@@ -99,7 +99,7 @@ const ServiceCard = ({ item, isAway }: any) => {
 
                     <View>
                         <CustomText
-                            text={item?.price}
+                            text={`$${item?.price}`}
                             fontWeight="700"
                             fontFam={fonts.Inter_Bold}
                             color={colors.primary}
@@ -137,7 +137,7 @@ const ServiceCard = ({ item, isAway }: any) => {
                                 fontFam={fonts.InterTight_Bold}
                             />
                         </View>
-                        <View style={[appStyles.row, styles.buttons, { backgroundColor: colors.rare, width:sizeHelper.calWp(180) }]}>
+                        <TouchableOpacity onPress={deleteService} style={[appStyles.row, styles.buttons, { backgroundColor: colors.rare, width:sizeHelper.calWp(180) }]}>
                             <Image
                                 style={{
                                     width: sizeHelper.calWp(30),
@@ -153,7 +153,7 @@ const ServiceCard = ({ item, isAway }: any) => {
                                 fontWeight="700"
                                 fontFam={fonts.InterTight_Bold}
                             />
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>

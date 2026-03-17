@@ -46,8 +46,6 @@ const AddServiceBottomSheet = ({
   setLoading,
   setMessage,
   setIsMessage,
-          
-              
 }: any) => {
   const [value, setValue] = useState<ClientValue>({
     serviceName: "",
@@ -61,7 +59,7 @@ const AddServiceBottomSheet = ({
   });
 
   const token = useSelector(getToken);
-  console.log("selectedClient", selectedService);
+  console.log("selectedService", selectedService);
 
   const durations = [
     { id: 1, name: "5 mint", time: "5" },
@@ -134,7 +132,7 @@ const AddServiceBottomSheet = ({
       id: selectedService?.id,
     };
 
-    ApiServices.CreateClient(param, ({ isSuccess, response, status }: any) => {
+    ApiServices.CreateServices(param, ({ isSuccess, response, status }: any) => {
       console.log("cdknvkndk", response, status);
       setLoading(false);
 
@@ -151,21 +149,33 @@ const AddServiceBottomSheet = ({
         setIsMessage(true);
         return;
       }
-
+      // AddServiceBottomSheet.tsx
       if (status == 200) {
+        const newService = {
+          id: response?.message?.data?.id || Date.now(), // ya jo API return kare
+          serviceName: serviceName,
+          price: price,
+          duration: duration,
+          category: category,
+        };
+
+        // parent ko bhej do
+        onGetService?.(newService);
+
         setToastColor(colors.primary);
-        setMessage(
-          selectedService?.id
-            ? "Service Update Successfully"
-            : "Service Added Successfully",
-        );
+        setMessage(selectedService?.id ? "Service Update Successfully" : "Service Added Successfully");
         setIsMessage(true);
         setTimeout(() => {
-          onGetService?.();
-
           setIsMessage(false);
           setValue({} as ClientValue);
+          SheetVisible.current?.dismiss();
         }, 1000);
+      }
+      if (status === 401) {
+        setMessage(response?.message?.info);
+        setToastColor(colors.red);
+        setLoading(false);
+        setIsMessage(true);
 
         return;
       } else {
@@ -331,7 +341,7 @@ const AddServiceBottomSheet = ({
       </View>
 
 
-       
+
     </>
   );
 };

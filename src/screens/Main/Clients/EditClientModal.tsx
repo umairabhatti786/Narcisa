@@ -53,17 +53,16 @@ const EditClientModal = ({
   console.log("selectedClient", selectedClient);
 
   useEffect(() => {
-    if(modalVisible){
-        setValue((prev) => ({
-      ...prev,
-      firstName: selectedClient?.name ? selectedClient?.name : "",
-      lastName: selectedClient?.lastName ? selectedClient?.lastName : "",
-      phone: selectedClient?.phone ? selectedClient?.phone : "",
-      email: selectedClient?.email ? selectedClient?.email : "",
-    }));
-
+    if (modalVisible) {
+      setValue((prev) => ({
+        ...prev,
+        firstName: selectedClient?.name ? selectedClient?.name : "",
+        lastName: selectedClient?.lastName ? selectedClient?.lastName : "",
+        phone: selectedClient?.phone ? selectedClient?.phone : "",
+        email: selectedClient?.email ? selectedClient?.email : "",
+      }));
     }
-  
+
   }, [modalVisible]);
   const OnSave = () => {
     const firstName = value?.firstName?.trim();
@@ -109,7 +108,7 @@ const EditClientModal = ({
         email: email,
       }),
       token: token,
-      id:selectedClient?.id
+      id: selectedClient?.id
     };
 
     ApiServices.CreateClient(param, ({ isSuccess, response, status }: any) => {
@@ -132,7 +131,7 @@ const EditClientModal = ({
 
       if (status == 200) {
         setToastColor(colors.primary);
-        setMessage(selectedClient?.id?"Client Update Successfully": "Client Added Successfully");
+        setMessage(selectedClient?.id ? "Client Update Successfully" : "Client Added Successfully");
         setIsMessage(true);
         setTimeout(() => {
           setModalVisible(false);
@@ -181,7 +180,7 @@ const EditClientModal = ({
             <View>
               <CustomText
                 text={
-                  Object.keys(selectedClient).length > 0
+                  Object.keys(selectedClient || {}).length > 0
                     ? "Edit Client"
                     : "Add Client"
                 }
@@ -192,7 +191,7 @@ const EditClientModal = ({
               />
               <CustomText
                 text={
-                  Object.keys(selectedClient).length > 0
+                  Object.keys(selectedClient || {}).length > 0
                     ? "Update client details"
                     : "Add client details"
                 }
