@@ -4,6 +4,8 @@ export const URLS = {
   CLIENTS: "/mapi/clients",
   SERVICE_GROUP:"/mapi/servicesgroups",
   SERVICE: "/mapi/services",
+  APPOINTMENTS:"/mapi/appointments",
+  LOCATIONS:"/mapi/locations"
 
 
 };

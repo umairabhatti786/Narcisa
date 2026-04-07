@@ -9,21 +9,14 @@ import {
   Alert,
 } from "react-native";
 import ScreenLayout from "../../../components/ScreenLayout";
-import CustomBottomSheet from "../../../components/CustomBottomSheet";
-import CustomInput from "../../../components/Input";
 import { icons } from "../../../assets/icons";
 import { appStyles } from "../../../utils/GlobalStyles";
 import sizeHelper from "../../../utils/Helpers";
 import { colors } from "../../../utils/Themes";
 import CustomText from "../../../components/Text";
-import CustomButtom from "../../../components/Button";
-
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "../../../utils/Themes/fonts";
-import { CommonActions } from "@react-navigation/native";
 import HomeHeader from "../../../components/HomeHeader";
 import ServiceCard from "../../../components/ServiceCard";
-import Dropdown from "../../../components/CustomDropDown";
 import { useSelector } from "react-redux";
 import { getToken } from "../../../redux/reducers/authReducer";
 import { ApiServices } from "../../../api/ApiServices";
@@ -33,30 +26,59 @@ import CustomToast from "../../../components/CustomToast";
 
 const ScheduleScreen = ({ navigation }: any) => {
   const addScheduleSheetRef = useRef<any>(null);
-  const addScheduleSheetRefSnapPoints = useMemo(() => ["80%", "80%"], []);
-  const insets = useSafeAreaInsets();
-  const [modalVisible, setModalVisible] = useState(true);
-  const [selected, setSelected] = useState("All");
   const token = useSelector(getToken);
   const [serviceGroup, setServiceGroup] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [selectedService, setSelectedService] = useState({});
+  const [selectedServiceGroup, setSelectedServiceGroup] = useState<any>({});
+  const [isServiceModalVisible, setIsServiceModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [toastColor, setToastColor] = useState(colors.red);
   const [isMessage, setIsMessage] = useState(false);
+  useEffect(() => {
+    GetServiceGroupData();
+    GetServicesData();
+  }, []);
 
   useEffect(() => {
-    GetServiceData();
+    GetServicesData();
   }, []);
-  console.log("token", serviceGroup);
 
-  const GetServiceData = () => {
+  const GetServiceGroupData = () => {
+    try {
+      ApiServices.GetServiceGroup(
+        token,
+        ({ isSuccess, response, status }: any) => {
+          console.log("cdknvkndk", response, status);
+
+          if (!isSuccess) {
+            console.log("Service--------Api--------Error");
+            return;
+          }
+
+          if (status == 200) {
+            setServiceGroup(response?.message?.data);
+            setSelectedServiceGroup(response?.message?.data[0]);
+            return;
+          } else {
+            setMessage(response?.message?.error);
+            setToastColor(colors.red);
+            setIsMessage(true);
+          }
+        },
+      );
+    } catch (error) {
+      console.log("Service--------Api--------Error", error);
+    }
+  };
+
+  const GetServicesData = () => {
     setLoading(true);
 
     try {
-      ApiServices.GetServiceGroup(token, ({ isSuccess, response, status }: any) => {
+      ApiServices.GetServices(token, ({ isSuccess, response, status }: any) => {
         console.log("cdknvkndk", response, status);
-        setLoading(false);
 
         if (!isSuccess) {
           console.log("Service--------Api--------Error");
@@ -69,11 +91,20 @@ const ScheduleScreen = ({ navigation }: any) => {
         }
 
         if (status == 200) {
-          setServiceGroup(response?.message?.data);
+          // setServices(
+          //   response?.message?.data.filter(
+          //     (it:any) => it?.groupId == selectedServiceGroup?.id,
+          //   ),
+          // );
+          setServices(response?.message?.data);
+
+          setAllServices(response?.message?.data);
+          setLoading(false);
           return;
         } else {
-          setMessage(response?.message?.info);
+          setMessage(response?.message?.error);
           setToastColor(colors.red);
+          setLoading(false);
           setIsMessage(true);
         }
       });
@@ -87,7 +118,7 @@ const ScheduleScreen = ({ navigation }: any) => {
       id: item?.id,
     };
 
-    setServiceGroup(serviceGroup.filter((it: any) => it.id !== item.id));
+    setServices(services.filter((it: any) => it.id !== item.id));
 
     try {
       ApiServices.DeleteService(
@@ -122,34 +153,33 @@ const ScheduleScreen = ({ navigation }: any) => {
       console.log("Service--------Api--------Error", error);
     }
   };
-  const categories = [
-    { id: 1, name: "All" },
-    { id: 2, name: "Hair" },
-    { id: 3, name: "Face" },
-    { id: 4, name: "Nails" },
-    { id: 5, name: "Ostalo" },
-  ];
-  const filteredServices = useMemo(() => {
-    if (selected === "All") {
-      return serviceGroup;
-    }
 
-    return serviceGroup.filter(
-      (item: any) => item?.category?.name === selected
-    );
-  }, [selected, serviceGroup]);
   return (
     <>
-      <ScreenLayout>
+      <ScreenLayout style={{ paddingHorizontal: -1, gap: 0 }}>
         <View
           style={{
             padding: sizeHelper.calWp(35),
-            gap: sizeHelper.calHp(20),
+            backgroundColor: colors.white,
           }}
         >
           <HomeHeader />
-          <View style={styles.line} />
-          <View style={appStyles.rowjustify}>
+        </View>
+        <View style={styles.line} />
+
+        <View
+          style={{
+            paddingVertical: sizeHelper.calWp(35),
+            backgroundColor: colors.white,
+            gap: sizeHelper.calHp(30),
+          }}
+        >
+          <View
+            style={{
+              ...appStyles.rowjustify,
+              paddingHorizontal: sizeHelper.calWp(35),
+            }}
+          >
             <CustomText
               text={"Services"}
               size={28}
@@ -159,29 +189,12 @@ const ScheduleScreen = ({ navigation }: any) => {
             />
             <TouchableOpacity
               activeOpacity={0.5}
-              onPress={() => addScheduleSheetRef.current.present()}
-              style={
-                {
-                  // position: "absolute",
-                  // right: sizeHelper.calWp(40),
-                  // bottom: sizeHelper.calHp(120),
-                  // backgroundColor:'red'
-                }
-              }
+              onPress={() => {
+                setSelectedService({});
+                setIsServiceModalVisible(true);
+              }}
             >
-              {/* <Shadow
-          distance={10} // spread size
-          startColor="rgba(124,58,237,0.45)" // main glow color
-          endColor="rgba(124,58,237,0.00)" // fade out
-          offset={[0, 0]}
-          paintInside={false}
-          // 👈 push shadow DOWN
-          // containerViewStyle={{
-          //   borderRadius: SIZE / 2,
-          // }}
-        > */}
               <View
-                // onPress={() => navigation.navigate('SearchScreen')}
                 style={{
                   height: sizeHelper.calHp(60),
                   width: sizeHelper.calHp(60),
@@ -204,35 +217,50 @@ const ScheduleScreen = ({ navigation }: any) => {
                   }}
                 />
               </View>
-              {/* </Shadow> */}
             </TouchableOpacity>
           </View>
+
           <FlatList
-            data={categories}
-            keyExtractor={(item) => item.id?.toString() || Math.random().toString()} // must be unique
+            data={serviceGroup}
+            keyExtractor={(item) =>
+              item.id?.toString() || Math.random().toString()
+            } // must be unique
             horizontal
+            contentContainerStyle={{ paddingHorizontal: sizeHelper.calWp(35) }}
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => setSelected(item.name)}
+                onPress={() => {
+                  setSelectedServiceGroup(item);
+                }}
                 style={[
                   styles.catagoryButton,
-                  selected === item.name && styles.activebg,
+                  selectedServiceGroup?.id === item.id && styles.activebg,
                 ]}
               >
                 <CustomText
-                  text={item.name}
+                  text={item.groupName}
                   size={24}
                   fontWeight="700"
                   color={colors.text_grey}
                   fontFam={fonts.InterTight_Bold}
-                  style={[selected === item.name && styles.activetext]}
+                  style={[
+                    selectedServiceGroup?.id === item.id && styles.activetext,
+                  ]}
                 />
               </TouchableOpacity>
             )}
           />
+        </View>
+        <View style={styles.line} />
+        {loading ? (
+          <></>
+        ) : (
           <FlatList
-            data={filteredServices}
+            data={services.filter(
+              (it) => it?.groupId == selectedServiceGroup?.id,
+            )}
+            style={{ padding: sizeHelper.calWp(35) }}
             contentContainerStyle={{
               gap: sizeHelper.calWp(30),
               paddingBottom: sizeHelper.calHp(180),
@@ -262,10 +290,15 @@ const ScheduleScreen = ({ navigation }: any) => {
                 <>
                   <ServiceCard
                     item={item}
+                    onEdit={() => {
+                      console.log("ckdnckdnkcd", item);
+                      setSelectedService(item);
+                      setIsServiceModalVisible(true);
+                    }}
                     deleteService={() => {
                       Alert.alert(
                         `Alert!`,
-                        `Are you sure you want to delete this client.`,
+                        `Are you sure you want to delete this Service.`,
 
                         [
                           {
@@ -285,29 +318,25 @@ const ScheduleScreen = ({ navigation }: any) => {
               );
             }}
           />
-          <CustomBottomSheet
-            scrollEnabled={true}
-            snapPoints={addScheduleSheetRefSnapPoints}
-            bottomSheetModalRef={addScheduleSheetRef}
-          >
-            // ScheduleScreen.tsx
-            <AddServiceBottomSheet
-              SheetVisible={addScheduleSheetRef}
-              selectedService={selectedService}
-              serviceGroup={serviceGroup}
-              setToastColor={setToastColor}
-              setLoading={setLoading}
-              loading={loading}
-              setMessage={setMessage}
-              setIsMessage={setIsMessage}
-              onGetService={(newService: any) => {
-                // local state mein naya service add karo
-                setServiceGroup(prev => [...prev, newService]);
-              }}
-            />
-          </CustomBottomSheet>
-        </View>
+        )}
       </ScreenLayout>
+
+      <AddServiceBottomSheet
+        SheetVisible={addScheduleSheetRef}
+        modalVisible={isServiceModalVisible}
+        setModalVisible={setIsServiceModalVisible}
+        selectedService={selectedService}
+        serviceGroup={serviceGroup}
+        setToastColor={setToastColor}
+        setLoading={setLoading}
+        loading={loading}
+        setMessage={setMessage}
+        setIsMessage={setIsMessage}
+        onGetService={(newService: any) => {
+          // local state mein naya service add karo
+          GetServicesData();
+        }}
+      />
 
       {loading && <ScreenLoader />}
       <CustomToast
@@ -330,13 +359,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   catagoryButton: {
-    width: sizeHelper.calWp(150),
     height: sizeHelper.calWp(70),
     backgroundColor: colors.light_blue,
     alignItems: "center",
     justifyContent: "center",
     marginRight: sizeHelper.calWp(20),
     borderRadius: sizeHelper.calWp(40),
+    paddingHorizontal: sizeHelper.calWp(30),
   },
   activebg: {
     backgroundColor: colors.primary,

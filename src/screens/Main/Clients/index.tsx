@@ -40,14 +40,12 @@ const ClientsScreen = ({ navigation }: any) => {
     GetClientData();
   }, []);
 
-  console.log("token", selectedClient);
 
   const GetClientData = () => {
     setLoading(true);
 
     try {
       ApiServices.GetClients(token, ({ isSuccess, response, status }: any) => {
-        console.log("cdknvkndk", response, status);
         setLoading(false);
 
         if (!isSuccess) {
@@ -64,7 +62,7 @@ const ClientsScreen = ({ navigation }: any) => {
           setClients(response?.message?.data);
           return;
         } else {
-          setMessage(response?.message?.info);
+          setMessage(response?.message?.error);
           setToastColor(colors.red);
           setIsMessage(true);
         }
@@ -100,9 +98,6 @@ const ClientsScreen = ({ navigation }: any) => {
           }
 
           if (status == 200) {
-            // setMessage(response?.message?.info);
-            // setToastColor(colors.green);
-            // setIsMessage(true);
             return;
           } else {
             setMessage(response?.message?.info);
@@ -145,13 +140,6 @@ const ClientsScreen = ({ navigation }: any) => {
     const emailUrl = `mailto:${email}`;
 
     Linking.openURL(emailUrl);
-
-    // if (supported) {
-    //   await Linking.openURL(url);
-    // } else {
-    //   Alert.alert("Alert!", "Email is not supported on this device");
-
-    // }
   };
 
   return (
@@ -181,6 +169,7 @@ const ClientsScreen = ({ navigation }: any) => {
             borderWidth={1}
             onPress={() => {
               setIsEditModal(true);
+              setSelectedClient({})
             }}
             borderColor={colors.primary + "50"}
             width={"100%"}

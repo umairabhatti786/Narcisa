@@ -1,26 +1,16 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import {
-  Image,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, Platform, StyleSheet, View } from "react-native";
 import CustomText from "../../components/Text";
 import sizeHelper from "../../utils/Helpers";
 import { fonts } from "../../utils/Themes/fonts";
-import { getToken } from "../../redux/reducers/authReducer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../utils/Themes";
 import ClientsScreen from "../../screens/Main/Clients";
 import { icons } from "../../assets/icons";
 import ServicesScreen from "../../screens/Main/Services";
-import { images } from "../../assets/images";
 import ScheduleScreen from "../../screens/Main/Schedule";
 import StaffScreen from "../../screens/Main/Staff";
 import MenuScreen from "../../screens/Main/Menu";
-import { Shadow } from "react-native-shadow-2";
-
 const BottomTab = ({ navigation }: any) => {
   const Bottom = createBottomTabNavigator();
   const insets = useSafeAreaInsets();
@@ -55,9 +45,6 @@ const BottomTab = ({ navigation }: any) => {
         tabBarShowLabel: false,
         animationEnabled: false,
         gestureEnabled: true,
-
-        // keyboardHidesTabBar: true,
-
         cardStyleInterpolator: ({ current, next, layouts }: any) => {
           return {
             cardStyle: {
@@ -142,11 +129,6 @@ const BottomTab = ({ navigation }: any) => {
                 }}
               >
                 <View
-                  // distance={7} // spread size
-                  // startColor="rgba(124,58,237,0.45)" // main glow color
-                  // endColor="rgba(124,58,237,0.00)" // fade out
-                  // offset={[0, 0]}
-
                   style={{
                     height: sizeHelper.calHp(95),
                     width: sizeHelper.calHp(95),
@@ -160,11 +142,7 @@ const BottomTab = ({ navigation }: any) => {
                     shadowOpacity: 1,
                     shadowRadius: 5,
                   }}
-                  // paintInside={false}
-                  // 👈 push shadow DOWN
-                  // containerViewStyle={{
-                  //   borderRadius: SIZE / 2,
-                  // }}
+                 
                 >
                   <Image
                     resizeMode="contain"
@@ -172,7 +150,6 @@ const BottomTab = ({ navigation }: any) => {
                     style={{
                       height: sizeHelper.calHp(40),
                       width: sizeHelper.calHp(40),
-                      // tintColor: theme.colors.white,
                     }}
                   />
                 </View>

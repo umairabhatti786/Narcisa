@@ -18,7 +18,8 @@ const CustomText = ({
   textDecorationLine,
   label,
   textTransform,
-  textAlign
+  textAlign,
+  adjustsFontSizeToFit
 }: TextType) => {
   const memoizedStyle = useMemo(() => {
     const baseStyle = {
@@ -46,7 +47,9 @@ const CustomText = ({
   ]);
 
   return (
-    <Text numberOfLines={numberOfLines} allowFontScaling={false} style={[memoizedStyle, {textAlign:textAlign}]}>
+    <Text numberOfLines={numberOfLines}
+    adjustsFontSizeToFit={adjustsFontSizeToFit}
+     allowFontScaling={false} style={[memoizedStyle, {textAlign:textAlign}]}>
       {text}
       {label}
     </Text>

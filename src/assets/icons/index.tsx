@@ -29,6 +29,7 @@ export const icons = {
     calendar:require("../icons/calendar.png"),
     drop_up:require("../icons/drop_up.png"),
     down_arrow:require("../icons/down_arrow.png"),
+    location:require("../icons/location.png"),
 
    
 

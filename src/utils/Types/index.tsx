@@ -18,6 +18,7 @@ export type TextType = {
   label?: any;
   textTransform?: any;
   textAlign?: any;
+  adjustsFontSizeToFit?:any
 };
 //  Custom button props
 

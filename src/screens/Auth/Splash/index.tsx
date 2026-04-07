@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Image, StatusBar, Platform } from "react-native";
 import sizeHelper from "../../../utils/Helpers";
 import { images } from "../../../assets/images";
-import ScreenLayout from "../../../components/ScreenLayout";
 import CustomText from "../../../components/Text";
 import { fonts } from "../../../utils/Themes/fonts";
 import { colors } from "../../../utils/Themes";
@@ -14,15 +13,6 @@ import { CommonActions } from "@react-navigation/native";
 const SplashScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const token = useSelector(getToken);
-  console.log("token", token);
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-
-  //     navigation.navigate("LoginScreen");
-  //   }, 3000);
-  // }, []);
-
   useEffect(() => {
     setTimeout(() => {
       navigation.dispatch(
@@ -77,12 +67,5 @@ const styles = StyleSheet.create({
   splash_background: {
     width: "100%",
     height: sizeHelper.calWp(400),
-  },
-  inner_logo: {
-    width: "100%",
-    height: sizeHelper.calHp(150),
-    position: "absolute",
-    alignSelf: "center",
-    top: "45%",
   },
 });

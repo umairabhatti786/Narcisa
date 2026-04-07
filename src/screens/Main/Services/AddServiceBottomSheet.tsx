@@ -1,10 +1,4 @@
-import {
-  Image,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import Modal from "react-native-modal";
 import sizeHelper, { screenWidth } from "../../../utils/Helpers";
@@ -14,8 +8,7 @@ import { icons } from "../../../assets/icons";
 import { fonts } from "../../../utils/Themes/fonts";
 import CustomText from "../../../components/Text";
 import CustomInput from "../../../components/Input";
-import CustomButtom from "../../../components/Button";
-import { emailRegex, phoneRegex } from "../../../utils/Regex";
+import CustomButton from "../../../components/Button";
 import { ApiServices } from "../../../api/ApiServices";
 import CustomToast from "../../../components/CustomToast";
 import ScreenLoader from "../../../components/ScreenLoader";
@@ -37,16 +30,15 @@ interface ClientValue {
 const AddServiceBottomSheet = ({
   SheetVisible,
   setModalVisible,
-  onGetClient,
   selectedService,
-  setSelectedClient,
   serviceGroup,
   onGetService,
-  setToastColor,
-  setLoading,
-  setMessage,
-  setIsMessage,
+  modalVisible,
 }: any) => {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [toastColor, setToastColor] = useState(colors.red);
+  const [isMessage, setIsMessage] = useState(false);
   const [value, setValue] = useState<ClientValue>({
     serviceName: "",
     serviceNameError: "",
@@ -59,42 +51,35 @@ const AddServiceBottomSheet = ({
   });
 
   const token = useSelector(getToken);
-  console.log("selectedService", selectedService);
-
-  const durations = [
-    { id: 1, name: "5 mint", time: "5" },
-    { id: 2, name: "10 mint", time: "10" },
-    { id: 3, name: "15 mint", time: "15" },
-    { id: 4, name: "20 mint", time: "20" },
-    { id: 5, name: "25 mint", time: "25" },
-    { id: 6, name: "30 mint", time: "30" },
-    { id: 7, name: "35 mint", time: "35" },
-    { id: 8, name: "40 mint", time: "40" },
-    { id: 9, name: "45 mint", time: "45" },
-    { id: 10, name: "50 mint", time: "50" },
-    { id: 11, name: "55 mint", time: "55" },
-    { id: 12, name: "60 mint", time: "60" },
-  ];
-
   useEffect(() => {
-    if (SheetVisible) {
+    if (modalVisible) {
       setValue((prev) => ({
         ...prev,
-        serviceName: selectedService?.serviceName
-          ? selectedService?.serviceName
-          : "",
+        serviceName: selectedService?.name ? selectedService?.name : "",
         price: selectedService?.price ? selectedService?.price : "",
         duration: selectedService?.duration ? selectedService?.duration : "",
-        category: selectedService?.category ? selectedService?.category : "",
+        category: selectedService?.groupId
+          ? (() => {
+              const item = serviceGroup.find(
+                (i: any) => i.id === String(selectedService?.groupId),
+              );
+              return item
+                ? {
+                    name: item.groupName,
+                    ...item,
+                  }
+                : null;
+            })()
+          : null,
       }));
     }
-  }, [SheetVisible]);
+  }, [modalVisible]);
+
   const OnSave = () => {
     const serviceName = value?.serviceName?.trim();
     const price = value?.price?.trim();
     const duration = value?.duration;
     const category = value?.category;
-    console.log("token", token);
     // Sequential Validation
     if (!serviceName) {
       setValue((prev) => ({
@@ -118,230 +103,251 @@ const AddServiceBottomSheet = ({
       setValue((prev) => ({ ...prev, categoryError: "Category is required" }));
       return;
     }
-    SheetVisible.current?.dismiss()
+    SheetVisible.current?.dismiss();
 
     setLoading(true);
     const param = {
       raw: JSON.stringify({
         name: serviceName,
-        duration: duration?.time,
+        duration: duration,
         price: price,
-        groupId: category?.id,
+        group: category?.id,
       }),
       token: token,
       id: selectedService?.id,
     };
-
-    ApiServices.CreateServices(param, ({ isSuccess, response, status }: any) => {
-      console.log("cdknvkndk", response, status);
-      setLoading(false);
-
-      if (!isSuccess) {
-        setMessage("API Error");
-        setToastColor(colors.red);
-        setIsMessage(true);
-        return;
-      }
-
-      if (!response?.success) {
-        setMessage(response?.message?.info || "Something went wrong");
-        setToastColor(colors.red);
-        setIsMessage(true);
-        return;
-      }
-      // AddServiceBottomSheet.tsx
-      if (status == 200) {
-        const newService = {
-          id: response?.message?.data?.id || Date.now(), // ya jo API return kare
-          serviceName: serviceName,
-          price: price,
-          duration: duration,
-          category: category,
-        };
-
-        // parent ko bhej do
-        onGetService?.(newService);
-
-        setToastColor(colors.primary);
-        setMessage(selectedService?.id ? "Service Update Successfully" : "Service Added Successfully");
-        setIsMessage(true);
-        setTimeout(() => {
-          setIsMessage(false);
-          setValue({} as ClientValue);
-          SheetVisible.current?.dismiss();
-        }, 1000);
-      }
-      if (status === 401) {
-        setMessage(response?.message?.info);
-        setToastColor(colors.red);
+    ApiServices.CreateServices(
+      param,
+      ({ isSuccess, response, status }: any) => {
+        console.log("mcndmncmddmncdncmdncmdmn", response?.success);
         setLoading(false);
-        setIsMessage(true);
 
-        return;
-      } else {
-        setMessage(response?.message?.info);
-        setToastColor(colors.red);
-        setLoading(false);
-        setIsMessage(true);
-      }
-    });
+        if (!isSuccess) {
+          setMessage("API Error");
+          setToastColor(colors.red);
+          setIsMessage(true);
+          return;
+        }
+
+        if (!response?.success) {
+          setMessage(response?.message?.info || "Something went wrong");
+          setToastColor(colors.red);
+          setIsMessage(true);
+          return;
+        }
+        // AddServiceBottomSheet.tsx
+        if (response?.success) {
+          // parent ko bhej do
+          onGetService?.();
+
+          setToastColor(colors.primary);
+          setMessage(
+            selectedService?.id
+              ? "Service Update Successfully"
+              : "Service Added Successfully",
+          );
+          setIsMessage(true);
+          setTimeout(() => {
+            setIsMessage(false);
+            setValue({} as ClientValue);
+            setModalVisible(false);
+          }, 1000);
+        } else {
+          setMessage(response?.message?.info);
+          setToastColor(colors.red);
+          setLoading(false);
+          setIsMessage(true);
+        }
+      },
+    );
   };
 
   return (
     <>
-      <View
+      <Modal
+        isVisible={modalVisible}
+        deviceWidth={screenWidth}
+        onBackButtonPress={() => {
+          setModalVisible?.(false);
+        }}
+        onBackdropPress={() => {
+          setModalVisible?.(false);
+        }}
+        backdropColor="rgba(0,0,0,0.5)"
         style={{
-          paddingHorizontal: sizeHelper.calWp(35),
-          gap: sizeHelper.calHp(30),
-
-          paddingBottom: sizeHelper.calHp(100),
+          flex: 1,
+          alignItems: "flex-end",
+          justifyContent: "flex-end",
+          marginBottom: sizeHelper.calHp(-60),
         }}
       >
-        <View style={appStyles.rowjustify}>
-          <View>
-            <CustomText
-              text={"Edit Service"}
-              fontWeight="700"
-              fontFam={fonts.Inter_Bold}
-              color={colors.black}
-              size={35}
-            />
-          </View>
-          <TouchableOpacity
-            onPress={() => SheetVisible.current?.dismiss()}
-            style={appStyles.circle}
+        <View style={styles.Container}>
+          <View
+            style={{
+              paddingHorizontal: sizeHelper.calWp(35),
+              gap: sizeHelper.calHp(30),
+
+              paddingBottom: sizeHelper.calHp(100),
+            }}
           >
-            <Image
+            <View style={appStyles.rowjustify}>
+              <View>
+                <CustomText
+                  text={
+                    Object.keys(selectedService).length > 0
+                      ? "Edit Service"
+                      : "Add Service"
+                  }
+                  fontWeight="700"
+                  fontFam={fonts.Inter_Bold}
+                  color={colors.black}
+                  size={35}
+                />
+                {Object.keys(selectedService).length > 0 && (
+                  <CustomText
+                    text={"Update Name and Duration"}
+                    fontWeight="600"
+                    fontFam={fonts.Inter_Medium}
+                    color={colors.text_grey}
+                    size={23}
+                  />
+                )}
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setModalVisible?.(false);
+                }}
+                style={appStyles.circle}
+              >
+                <Image
+                  style={{
+                    width: sizeHelper.calWp(25),
+                    height: sizeHelper.calWp(25),
+                  }}
+                  source={icons.cross}
+                />
+              </TouchableOpacity>
+            </View>
+            <View
               style={{
-                width: sizeHelper.calWp(25),
-                height: sizeHelper.calWp(25),
+                height: sizeHelper.calHp(2),
+                backgroundColor: colors.border,
+                width: "100%",
+                marginTop: sizeHelper.calHp(20),
+                marginBottom: sizeHelper.calHp(20),
               }}
-              source={icons.cross}
             />
-          </TouchableOpacity>
-        </View>
-        <View
-          style={{
-            height: sizeHelper.calHp(2),
-            backgroundColor: colors.border,
-            width: "100%",
-            marginTop: sizeHelper.calHp(20),
-            marginBottom: sizeHelper.calHp(20),
-          }}
-        />
-        <CustomInput
-          leftSource={icons.service}
-          tintColor={colors.primary}
-          placeholder="Service Name"
-          label="Service Name"
-          value={value.serviceName}
-          error={value.serviceNameError}
-          onChangeText={(text: any) =>
-            setValue((prev) => ({
-              ...prev,
-              serviceName: text,
-              serviceNameError: "",
-            }))
-          }
-          backgroundColor={colors?.background}
-        />
+            <CustomInput
+              leftSource={icons.service}
+              tintColor={colors.primary}
+              placeholder="Service Name"
+              label="Service Name"
+              value={value.serviceName}
+              error={value.serviceNameError}
+              onChangeText={(text: any) =>
+                setValue((prev) => ({
+                  ...prev,
+                  serviceName: text,
+                  serviceNameError: "",
+                }))
+              }
+              backgroundColor={colors?.background}
+            />
 
-        <CustomInput
-          leftSource={icons.dollar}
-          tintColor={colors.primary}
-          placeholder="Price"
-          keyboard={"number-pad"}
-          label="Price"
-          backgroundColor={colors?.background}
-          // width={"48%"}
-          value={value.price}
-          error={value.priceError}
-          onChangeText={(text: any) =>
-            setValue((prev) => ({
-              ...prev,
-              price: text,
-              priceError: "",
-            }))
-          }
-        />
-
-        <Dropdown
-          leftSource={icons.tags}
-          // width={"48%"}
-          onActions={(item: any) => {
-            setValue((prev) => ({
-              ...prev,
-              duration: item,
-              durationError: "",
-            }));
-          }}
-          data={durations?.map((item: any) => {
-            return {
-              ...item,
-              name: item?.name,
-            };
-          })}
-          tintColor={colors.primary}
-          placeholder="Duration"
-          label="Duration"
-          value={value?.duration}
-          error={value?.durationError}
-          lablelfontWeight={"900"}
-          textTransform="uppercase"
-          fontFamily={fonts.InterTight_Bold}
-          backgroundColor={colors?.background}
-        />
-        {/* </View> */}
-        <Dropdown
-          leftSource={icons.tags}
-          data={serviceGroup?.map((item: any) => {
-            return {
-              ...item,
-              name: item?.groupName,
-            };
-          })}
-          error={value?.categoryError}
-          value={value.category}
-          onActions={(item: any) => {
-            setValue((prev) => ({
-              ...prev,
-              category: item,
-              categoryError: "",
-            }));
-          }}
-          tintColor={colors.primary}
-          placeholder="Select Category"
-          label="Category"
-          lablelfontWeight={"900"}
-          textTransform="uppercase"
-          fontFamily={fonts.InterTight_Bold}
-          backgroundColor={colors?.background}
-        />
-
-        <CustomButtom onPress={OnSave} width={"100%"}>
-          <View style={{ ...appStyles.row, gap: sizeHelper.calWp(20) }}>
-            <Image
-              source={icons.changes}
-              style={{
-                width: sizeHelper.calWp(35),
-                height: sizeHelper.calWp(35),
-                marginTop: sizeHelper.calHp(8),
+            <Dropdown
+              leftSource={icons.tags}
+              data={serviceGroup?.map((item: any) => {
+                return {
+                  ...item,
+                  name: item?.groupName,
+                };
+              })}
+              error={value?.categoryError}
+              value={value.category}
+              onActions={(item: any) => {
+                setValue((prev) => ({
+                  ...prev,
+                  category: item,
+                  categoryError: "",
+                }));
               }}
-              resizeMode={"contain"}
+              tintColor={colors.primary}
+              placeholder="Select Category"
+              label="Category"
+              lablelfontWeight={"900"}
+              textTransform="uppercase"
+              fontFamily={fonts.InterTight_Bold}
+              backgroundColor={colors?.background}
             />
-            <CustomText
-              text={"Save Changes"}
-              color={colors.white}
-              size={27}
-              fontWeight={"700"}
-              fontFam={fonts.Inter_Bold}
+
+            <CustomInput
+              leftSource={icons.dollar}
+              tintColor={colors.primary}
+              placeholder="Price"
+              keyboard={"number-pad"}
+              label="Price"
+              backgroundColor={colors?.background}
+              value={value.price}
+              error={value.priceError}
+              onChangeText={(text: any) =>
+                setValue((prev) => ({
+                  ...prev,
+                  price: text,
+                  priceError: "",
+                }))
+              }
             />
+
+            <CustomInput
+              leftSource={icons.clock}
+              tintColor={colors.primary}
+              placeholder="Duration"
+              keyboard={"number-pad"}
+              label="Duration (mint)"
+              backgroundColor={colors?.background}
+              value={value.duration}
+              error={value.durationError}
+              onChangeText={(text: any) =>
+                setValue((prev) => ({
+                  ...prev,
+                  duration: text,
+                  durationError: "",
+                }))
+              }
+            />
+
+            <CustomButton onPress={OnSave} width={"100%"}>
+              <View style={{ ...appStyles.row, gap: sizeHelper.calWp(20) }}>
+                <Image
+                  source={icons.changes}
+                  style={{
+                    width: sizeHelper.calWp(35),
+                    height: sizeHelper.calWp(35),
+                    marginTop: sizeHelper.calHp(8),
+                  }}
+                  resizeMode={"contain"}
+                />
+                <CustomText
+                  text={"Save Changes"}
+                  color={colors.white}
+                  size={27}
+                  fontWeight={"700"}
+                  fontFam={fonts.Inter_Bold}
+                />
+              </View>
+            </CustomButton>
           </View>
-        </CustomButtom>
-      </View>
+        </View>
 
-
-
+        {loading && <ScreenLoader />}
+        <CustomToast
+          marginBottom={sizeHelper.calHp(100)}
+          isVisable={isMessage}
+          setIsVisable={setIsMessage}
+          message={message}
+          backgroundColor={toastColor}
+        />
+      </Modal>
     </>
   );
 };
@@ -350,11 +356,11 @@ export default AddServiceBottomSheet;
 
 const styles = StyleSheet.create({
   Container: {
-    width: "100%",
+    width: "110%",
     alignSelf: "center",
     backgroundColor: colors.white,
-    borderRadius: sizeHelper.calWp(40),
-    paddingHorizontal: sizeHelper.calWp(35),
+    borderTopLeftRadius: sizeHelper.calWp(50),
+    borderTopRightRadius: sizeHelper.calWp(50),
     paddingVertical: sizeHelper.calHp(35),
     gap: sizeHelper.calHp(30),
   },

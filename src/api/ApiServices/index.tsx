@@ -49,7 +49,6 @@ const response = await fetch(
   requestOptions
 );
       const data = await response.json();
-      console.log("response", response);
 
       callback({
         isSuccess: true,
@@ -65,6 +64,45 @@ const response = await fetch(
       });
     }
   },
+
+
+   CreateAppointments: async (params: any, callback: any) => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", `Bearer ${params?.token}`);
+    console.log("params", params);
+
+    const requestOptions = {
+      method:"POST",
+      headers: myHeaders,
+      body: params.raw,
+      redirect: "follow",
+    };
+
+    try {
+const response = await fetch(
+  getApiUrl(`${URLS.APPOINTMENTS}`),
+  requestOptions
+);
+      const data = await response.json();
+
+      callback({
+        isSuccess: true,
+        response: data,
+        status: response.status,
+      });
+    } catch (error) {
+      console.log("API ERROR:", error);
+
+      callback({
+        isSuccess: false,
+        response: error,
+      });
+    }
+  },
+
+
+  
 
 
     CreateServices: async (params: any, callback: any) => {
@@ -86,7 +124,6 @@ const response = await fetch(
   requestOptions
 );
       const data = await response.json();
-      console.log("response", response);
 
       callback({
         isSuccess: true,
@@ -135,6 +172,103 @@ const response = await fetch(
     }
   },
 
+   GetServices: async (token: any, callback: any) => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", `Bearer ${token}`);
+
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
+    };
+
+    try {
+      const response = await fetch(getApiUrl(URLS.SERVICE), requestOptions);
+
+      const data = await response.json();
+      console.log("response", response);
+
+      callback({
+        isSuccess: true,
+        response: data,
+        status: response.status,
+      });
+    } catch (error) {
+      console.log("API ERROR:", error);
+
+      callback({
+        isSuccess: false,
+        response: error,
+      });
+    }
+  },
+
+
+    GetAppointments: async (params: any, callback: any) => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", `Bearer ${params?.token}`);
+
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
+    };
+console.log("Cosoisnsncdcd",params?.token)
+    try {
+      const response = await fetch(getApiUrl(URLS.APPOINTMENTS+`?dateStart=${params?.dateStart}&dateEnd=${params?.dateEnd}`), requestOptions);
+
+      const data = await response.json();
+      console.log("response", response);
+
+      callback({
+        isSuccess: true,
+        response: data,
+        status: response.status,
+      });
+    } catch (error) {
+      console.log("API ERROR:", error);
+
+      callback({
+        isSuccess: false,
+        response: error,
+      });
+    }
+  },
+
+
+    GetLocations: async (token: any, callback: any) => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", `Bearer ${token}`);
+
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
+    };
+
+    try {
+      const response = await fetch(getApiUrl(URLS.LOCATIONS), requestOptions);
+
+      const data = await response.json();
+
+      callback({
+        isSuccess: true,
+        response: data,
+        status: response.status,
+      });
+    } catch (error) {
+      console.log("API ERROR:", error);
+
+      callback({
+        isSuccess: false,
+        response: error,
+      });
+    }
+  },
+
 
    GetServiceGroup: async (token: any, callback: any) => {
     const myHeaders = new Headers();
@@ -151,7 +285,6 @@ const response = await fetch(
       const response = await fetch(getApiUrl(URLS.SERVICE_GROUP), requestOptions);
 
       const data = await response.json();
-      console.log("response", response);
 
       callback({
         isSuccess: true,
@@ -184,7 +317,6 @@ const response = await fetch(
       const response = await fetch(getApiUrl(URLS.CLIENTS+`?id=${params?.id}`), requestOptions);
 
       const data = await response.json();
-      console.log("response", response);
 
       callback({
         isSuccess: true,
@@ -212,10 +344,9 @@ const response = await fetch(
     };
 
     try {
-      const response = await fetch(getApiUrl(URLS.CLIENTS+`?id=${params?.id}`), requestOptions);
+      const response = await fetch(getApiUrl(URLS.SERVICE+`?id=${params?.id}`), requestOptions);
 
       const data = await response.json();
-      console.log("response", response);
 
       callback({
         isSuccess: true,

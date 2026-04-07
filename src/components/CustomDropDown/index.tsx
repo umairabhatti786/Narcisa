@@ -7,6 +7,7 @@ import { images } from "../../assets/images";
 import { fonts } from "../../utils/Themes/fonts";
 import { colors } from "../../utils/Themes";
 import { icons } from "../../assets/icons";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 const Dropdown = ({
   height,
@@ -22,11 +23,12 @@ const Dropdown = ({
   leftSource,
   tintColor,
   data,
-  error
+  error,
+  disabled,
 }: any) => {
   const [isOpen, setIsOpen] = useState(false);
 
- 
+ console.log("cldmclkdmcld",value)
   return (
     <View
       style={{
@@ -50,7 +52,9 @@ const Dropdown = ({
       )}
       <TouchableOpacity
         activeOpacity={0.5}
+        
         onPress={() => setIsOpen(!isOpen)}
+      disabled={disabled}
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
@@ -79,7 +83,9 @@ const Dropdown = ({
           )}
           {value?.name ? (
             <View style={{ ...appStyles.row }}>
-              <CustomText text={value?.name} color={colors.black} size={24} />
+              <CustomText text={value?.name} 
+              textTransform={"capitalize"}
+              color={colors.black} size={24} />
             </View>
           ) : (
             <CustomText text={placeholder} color={colors.text_grey} size={22} />
@@ -88,7 +94,7 @@ const Dropdown = ({
 
         <TouchableOpacity
           onPress={onRightSource}
-          disabled={!onRightSource}
+          disabled={disabled}
           activeOpacity={0.3}
         >
           <Image
@@ -117,12 +123,17 @@ const Dropdown = ({
           }}
         >
           <ScrollView 
-          nestedScrollEnabled={true}
-          showsVerticalScrollIndicator={false}>
-            <View>
+            nestedScrollEnabled={true}
+    showsVerticalScrollIndicator={false}
+    keyboardShouldPersistTaps="handled"
+          >
+            
+           
               {data?.map((item: any, index: any) => {
                 return (
-                  <View>
+                  <View
+                  key={index}
+                  >
                     <TouchableOpacity
                       key={index.toString()}
                       onPress={() => {
@@ -147,6 +158,8 @@ const Dropdown = ({
                         }}
                       >
                         <CustomText
+                                      textTransform={"capitalize"}
+
                           text={item?.name}
                           color={colors.black}
                           size={22}
@@ -165,20 +178,21 @@ const Dropdown = ({
                   </View>
                 );
               })}
-            </View>
+          
           </ScrollView>
         </View>
       )}
 
       {error && (
-        <View
-          style={{
-            marginTop: sizeHelper.calHp(10),
-            alignItems:"flex-end"
-          }}>
-          <CustomText size={20} text={error} color={colors.red} />
-        </View>
-      )} 
+          <View
+            style={{
+              marginTop: sizeHelper.calHp(10),
+              // alignItems: "flex-end",
+            }}
+          >
+            <CustomText size={18} text={error} color={colors.red} />
+          </View>
+        )}
       
     </View>
   );

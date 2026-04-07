@@ -1,16 +1,13 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Dimensions,
-  StatusBar,
   Image,
   TouchableOpacity,
-  Platform,
 } from "react-native";
-import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../../../utils/Themes";
 import sizeHelper from "../../../utils/Helpers";
 import ScreenLayout from "../../../components/ScreenLayout";
@@ -18,12 +15,15 @@ import HomeHeader from "../../../components/HomeHeader";
 import CustomText from "../../../components/Text";
 import { fonts } from "../../../utils/Themes/fonts";
 import { icons } from "../../../assets/icons";
-import { Shadow } from "react-native-shadow-2";
 import CustomBottomSheet from "../../../components/CustomBottomSheet";
-import { appStyles } from "../../../utils/GlobalStyles";
-import CustomInput from "../../../components/Input";
-import CustomButton from "../../../components/Button";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import CreateAppointmentSheet from "./CreateAppointmentSheet";
+import ScreenLoader from "../../../components/ScreenLoader";
+import CustomToast from "../../../components/CustomToast";
+import { ApiServices } from "../../../api/ApiServices";
+import { useSelector } from "react-redux";
+import { getToken } from "../../../redux/reducers/authReducer";
+import moment from "moment";
 
 const { width } = Dimensions.get("window");
 
@@ -31,65 +31,21 @@ const { width } = Dimensions.get("window");
    CONFIG
 ========================= */
 
-const START_HOUR = 8;
-const END_HOUR = 16;
-const HOUR_HEIGHT = sizeHelper.calHp(140);
-
-/* =========================
-   MOCK DATA
-========================= */
-
-const DAYS = [
-  { label: "THU", date: 5 },
-  { label: "FRI", date: 6 },
-  { label: "SAT", date: 7 },
-  { label: "SUN", date: 8 },
-  { label: "MON", date: 9 },
-  { label: "TUE", date: 10 },
-  { label: "WED", date: 11 },
-];
-
-const APPOINTMENTS = [
-  {
-    id: 1,
-    client: "Mary P.",
-    service: "Blowout",
-    start: "09:00",
-    end: "10:00",
-    colors: "#AD46FF",
-    staff: "ANNA",
-  },
-  {
-    id: 2,
-    client: "Nicholas K.",
-    service: "Men's Haircut",
-    start: "10:30",
-    end: "12:00",
-    colors: "#2B7FFF",
-    staff: "MARK",
-  },
-  {
-    id: 3,
-    client: "Helen S.",
-    service: "Manicure",
-    start: "13:00",
-    end: "14:00",
-    colors: "#FF2056",
-    staff: "JANE",
-  },
-];
-
-/* =========================
-   HELPERS
-========================= */
+const START_HOUR = 0;
+const END_HOUR = 24;
+const HOUR_HEIGHT = sizeHelper.calHp(180);
+const MIN_HEIGHT = sizeHelper.calHp(120); // ✅ ensures small events are visible
 
 const timeToPosition = (time: any) => {
-  const [hour, minute] = time.split(":").map(Number);
-  const totalMinutes = (hour - START_HOUR) * 60 + minute;
-  return (totalMinutes / 60) * HOUR_HEIGHT;
+  const [hour, minute, second = 0] = time.split(":").map(Number);
+
+  const totalMinutes = (hour - START_HOUR) * 60 + minute + second / 60;
+
+  return (totalMinutes / 60) * HOUR_HEIGHT + sizeHelper.calHp(15);
 };
 
-const getDurationHeight = (start, end) => {
+// ✅ Calculate duration height
+const getDurationHeight = (start: any, end: any) => {
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
 
@@ -98,7 +54,30 @@ const getDurationHeight = (start, end) => {
 
   const duration = endMin - startMin;
 
-  return (duration / 60) * HOUR_HEIGHT;
+  const height = (duration / 60) * HOUR_HEIGHT;
+
+  return Math.max(height, MIN_HEIGHT); // ✅ fix for small durations
+};
+
+const getCurrentWeek = () => {
+  const startOfWeek = moment().startOf("week"); // Sunday start
+
+  const days = [];
+
+  for (let i = 0; i < 7; i++) {
+    const day = startOfWeek.clone().add(i, "days");
+
+    days.push({
+      label: day.format("ddd").toUpperCase(), // MON, TUE...
+      date: day.date(), // 1, 2, 3...
+      fullDate: day.format("YYYY-MM-DD"), // useful for API
+      start: day.format("YYYY-MM-DD") + " 00:00:00",
+      end: day.format("YYYY-MM-DD") + " 23:59:59",
+      isToday: day.isSame(moment(), "day"),
+    });
+  }
+
+  return days;
 };
 
 /* =========================
@@ -108,13 +87,73 @@ const getDurationHeight = (start, end) => {
 export default function ScheduleScreen() {
   const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
   const addScheduleSheetRef = useRef<any>(null);
+  const [isSheetVisible, setIsSheetVisible] = useState(false);
   const addScheduleSheetRefSnapPoints = useMemo(() => ["80%", "80%"], []);
   const insets = useSafeAreaInsets();
-  const [selected,setSelected]=useState(0)
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [toastColor, setToastColor] = useState(colors.red);
+  const [isMessage, setIsMessage] = useState(false);
+  const token = useSelector(getToken);
+  const [appointments, setAppointments] = useState([]);
+  const DAYS = getCurrentWeek();
+  const scrollRef = useRef<any>(null);
+
+  const [selectedDay, setSelectedDay] = useState(
+    DAYS.find((day) => day.isToday) || DAYS[0],
+  );
+  console.log("DAYS", selectedDay);
+  useEffect(() => {
+    GetClientData();
+  }, []);
+
+  useEffect(() => {
+    GetClientData();
+  }, [selectedDay]);
+
+  const GetClientData = () => {
+    setLoading(true);
+    let params = {
+      token: token,
+      dateStart: selectedDay?.start,
+      dateEnd: selectedDay?.end,
+    };
+
+    try {
+      ApiServices.GetAppointments(
+        params,
+        ({ isSuccess, response, status }: any) => {
+          console.log("Appointment", response, status);
+          setLoading(false);
+
+          if (!isSuccess) {
+            console.log("Client--------Api--------Error");
+            return;
+          }
+          if (!response?.success) {
+            setMessage(response?.message?.info || "Something went wrong");
+            setToastColor(colors.red);
+            return;
+          }
+
+          if (status == 200) {
+            setAppointments(response?.message?.data);
+            return;
+          } else {
+            setMessage(response?.message?.error);
+            setToastColor(colors.red);
+            setIsMessage(true);
+          }
+        },
+      );
+    } catch (error) {
+      console.log("Client--------Api--------Error", error);
+    }
+  };
 
   return (
     <>
-      <ScreenLayout  style={{ paddingHorizontal: -1, gap: 0 }}>
+      <ScreenLayout style={{ paddingHorizontal: -1, gap: 0 }}>
         <View
           style={{
             padding: sizeHelper.calWp(35),
@@ -128,19 +167,31 @@ export default function ScheduleScreen() {
         {/* ================= DAYS HEADER ================= */}
         <View style={styles.daysContainer}>
           {DAYS.map((day, index) => {
-
             return (
               <TouchableOpacity
-              activeOpacity={0.5}
-              onPress={()=>setSelected(index)}
+                activeOpacity={0.5}
+                onPress={() => {
+                  scrollRef.current?.scrollTo({
+                    y: 0,
+                    animated: false,
+                  });
+                  setSelectedDay(day);
+                }}
                 key={index}
-                style={[styles.dayItem, selected==index && styles.selectedDay]}
+                style={[
+                  styles.dayItem,
+                  selectedDay?.label == day?.label && styles.selectedDay,
+                ]}
               >
                 <CustomText
                   text={day.label}
                   fontWeight="600"
                   fontFam={fonts.InterTight_Medium}
-                  color={selected==index  ? colors.white : colors.text_grey}
+                  color={
+                    selectedDay?.label == day?.label
+                      ? colors.white
+                      : colors.text_grey
+                  }
                   // size={23}
                 />
 
@@ -148,15 +199,13 @@ export default function ScheduleScreen() {
                   text={day.date}
                   fontWeight="700"
                   fontFam={fonts.Inter_Bold}
-                  color={selected==index  ? colors.white : colors.text_grey}
+                  color={
+                    selectedDay?.label == day?.label
+                      ? colors.white
+                      : colors.text_grey
+                  }
                   size={30}
                 />
-                {/* <Text style={[styles.dayLabel, selected && { color: "#fff" }]}>
-                {day.label}
-              </Text> */}
-                {/* <Text style={[styles.dayDate, selected && { color: "#fff" }]}>
-                {day.date}
-              </Text> */}
               </TouchableOpacity>
             );
           })}
@@ -164,7 +213,11 @@ export default function ScheduleScreen() {
         <View style={styles.line} />
 
         {/* ================= TIMELINE ================= */}
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          ref={scrollRef}
+          contentContainerStyle={{ paddingBottom: sizeHelper.calHp(250) }}
+        >
           <View style={[styles.timelineContainer, { height: totalHeight }]}>
             {/* Time Labels */}
             {Array.from(
@@ -186,9 +239,18 @@ export default function ScheduleScreen() {
             ))}
 
             {/* Appointments */}
-            {APPOINTMENTS.map((item) => {
-              const top = timeToPosition(item.start);
-              const height = getDurationHeight(item.start, item.end);
+            {appointments?.map((item: any) => {
+              const startTime = moment(
+                item?.dateStart,
+                "YYYY-MM-DD HH:mm:ss",
+              ).format("HH:mm:ss");
+              const endTime = moment(
+                item?.dateEnd,
+                "YYYY-MM-DD HH:mm:ss",
+              ).format("HH:mm:ss");
+              console.log("ckdncdkncd", startTime);
+              const top = timeToPosition(startTime);
+              const height = getDurationHeight(startTime, endTime);
 
               return (
                 <View
@@ -199,14 +261,14 @@ export default function ScheduleScreen() {
                     {
                       top,
                       height,
-                      backgroundColor: item?.colors,
+                      backgroundColor: item?.workerColor,
                     },
                   ]}
                 >
                   <View style={styles.cardContent}>
                     <View>
                       <CustomText
-                        text={item.client}
+                        text={item?.clientName}
                         fontWeight="700"
                         fontFam={fonts.Inter_Bold}
                         color={colors.white}
@@ -214,26 +276,21 @@ export default function ScheduleScreen() {
                       />
 
                       <CustomText
-                        text={item.service}
+                        text={item?.serviceName}
                         fontWeight="600"
                         fontFam={fonts.InterTight_Medium}
                         color={colors.white}
-                        // size={25}
                       />
-                      {/* <Text style={styles.clientText}>{item.client}</Text>
-                    <Text style={styles.serviceText}>{item.service}</Text> */}
                     </View>
 
                     <View style={styles.rightContent}>
                       <View style={styles.staffBadge}>
                         <CustomText
-                          text={item.staff}
+                          text={item?.workerName}
                           fontWeight="700"
                           fontFam={fonts.Inter_Bold}
                           color={colors.white}
-                          // size={30}
                         />
-                        {/* <Text style={styles.staffText}>{item.staff}</Text> */}
                       </View>
                     </View>
                   </View>
@@ -247,19 +304,16 @@ export default function ScheduleScreen() {
                       }}
                       source={icons.clock}
                     />
-                    {/* <Icon
-                        name="clock"
-                        size={14}
-                        color="#fff"
-                      /> */}
+
                     <CustomText
-                      text={item.start}
+                      text={moment(
+                        item?.dateStart,
+                        "YYYY-MM-DD HH:mm:ss",
+                      ).format("HH:mm")}
                       fontWeight="700"
                       fontFam={fonts.Inter_Bold}
                       color={colors.white}
-                      // size={30}
                     />
-                    {/* <Text style={styles.timeText}> {item.start}</Text> */}
                   </View>
                 </View>
               );
@@ -270,50 +324,39 @@ export default function ScheduleScreen() {
 
       <TouchableOpacity
         activeOpacity={0.5}
-        onPress={() => addScheduleSheetRef.current.present()}
+        onPress={() => {
+          setIsSheetVisible(true);
+          addScheduleSheetRef.current.present();
+        }}
         style={{
           position: "absolute",
           right: sizeHelper.calWp(40),
-
           bottom: sizeHelper.calHp(120),
-          // backgroundColor:'red'
         }}
       >
-        {/* <Shadow
-          distance={10} // spread size
-          startColor="rgba(124,58,237,0.45)" // main glow color
-          endColor="rgba(124,58,237,0.00)" // fade out
-          offset={[0, 0]}
-          paintInside={false}
-          // 👈 push shadow DOWN
-          // containerViewStyle={{
-          //   borderRadius: SIZE / 2,
-          // }}
-        > */}
-          <View
-            // onPress={() => navigation.navigate('SearchScreen')}
+        <View
+          style={{
+            height: sizeHelper.calHp(80),
+            width: sizeHelper.calHp(80),
+            borderRadius: sizeHelper.calWp(80),
+            backgroundColor: colors.primary,
+            alignItems: "center",
+            justifyContent: "center",
+            elevation: 8,
+            shadowColor: "#6F00FF",
+            padding: sizeHelper.calWp(10),
+          }}
+        >
+          <Image
+            resizeMode="contain"
+            source={icons.plus}
             style={{
-              height: sizeHelper.calHp(80),
-              width: sizeHelper.calHp(80),
-              borderRadius: sizeHelper.calWp(80),
-              backgroundColor: colors.primary,
-              alignItems: "center",
-              justifyContent: "center",
-              elevation: 8,
-              shadowColor: "#6F00FF",
-              padding: sizeHelper.calWp(10),
+              height: sizeHelper.calHp(30),
+              width: sizeHelper.calHp(30),
+              tintColor: colors.white,
             }}
-          >
-            <Image
-              resizeMode="contain"
-              source={icons.plus}
-              style={{
-                height: sizeHelper.calHp(30),
-                width: sizeHelper.calHp(30),
-                tintColor: colors.white,
-              }}
-            />
-          </View>
+          />
+        </View>
         {/* </Shadow> */}
       </TouchableOpacity>
 
@@ -321,119 +364,30 @@ export default function ScheduleScreen() {
         snapPoints={addScheduleSheetRefSnapPoints}
         bottomSheetModalRef={addScheduleSheetRef}
       >
-        <View
-          style={{
-            paddingHorizontal: sizeHelper.calWp(35),
-            gap: sizeHelper.calHp(30),
-
-            paddingBottom:   Platform.OS == "ios"
-                          ? sizeHelper.calHp(30)
-                          : insets.bottom <= 16
-                          ? (insets.bottom - insets.bottom)+sizeHelper.calHp(30)
-                          : insets.bottom
-            
-          }}
-        >
-          <View style={appStyles.rowjustify}>
-            <View>
-              <CustomText
-                text={"New Appointment"}
-                fontWeight="700"
-                fontFam={fonts.Inter_Bold}
-                color={colors.black}
-                size={35}
-              />
-
-              <CustomText
-                text={"Select client and service"}
-                fontWeight="600"
-                fontFam={fonts.Inter_Medium}
-                color={colors.text_grey}
-                size={23}
-              />
-            </View>
-           <CustomButton
-           height={64}
-            //   textColor={theme.colors.white}
-              onPress={() => {
-                addScheduleSheetRef.current.dismiss()
-              
-              }}
-              bgColor={colors.primary+"20"}
-              borderWidth={1}
-              borderColor={colors.primary+"10"}
-              paddingHorizontal={12}
-         
-          >
-            <View style={{ ...appStyles.row, gap: sizeHelper.calWp(10) }}>
-            
-
-              <Image
-                source={icons.clock}
-                style={{
-                  width: sizeHelper.calWp(28),
-                  height: sizeHelper.calWp(28),
-                  // marginTop:sizeHelper.calHp(8),
-                  tintColor:colors.primary
-                }}
-                resizeMode={"contain"}
-              />
-                <CustomText
-                text={"10:46"}
-                color={colors.primary}
-                size={27}
-                fontWeight={"700"}
-                fontFam={fonts.Inter_Bold}
-              />
-            </View>
-          </CustomButton>
-          </View>
-
-          <CustomInput
-            leftSource={icons.client}
-            placeholder=""
-            label="Client"
-            backgroundColor={colors?.background}
-          />
-
-          <CustomInput
-            leftSource={icons.service}
-            placeholder=""
-            label="Service"
-            backgroundColor={colors?.background}
-          />
-          <View style={appStyles.rowjustify}>
-            <CustomButton
-              text="Cancel"
-              bgColor={colors.light_blue}
-              textColor={colors.text_grey}
-               onPress={()=>addScheduleSheetRef.current.dismiss()}
-              width={"48%"}
-            />
-
-            <CustomButton
-              text="Create"
-               onPress={()=>addScheduleSheetRef.current.dismiss()}
-              width={"48%"}
-            />
-          </View>
-        </View>
+        <CreateAppointmentSheet
+          SheetVisible={addScheduleSheetRef}
+          setToastColor={setToastColor}
+          setLoading={setLoading}
+          isSheetVisible={isSheetVisible}
+          loading={loading}
+          setMessage={setMessage}
+          setIsMessage={setIsMessage}
+          onGetAppointments={(newService: any) => {}}
+        />
       </CustomBottomSheet>
+
+      {loading && <ScreenLoader />}
+      <CustomToast
+        isVisable={isMessage}
+        setIsVisable={setIsMessage}
+        message={message}
+        backgroundColor={toastColor}
+      />
     </>
   );
 }
 
-/* =========================
-   STYLES
-========================= */
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F2F2F7",
-    paddingTop: 50,
-  },
-
   /* DAYS */
   daysContainer: {
     flexDirection: "row",
@@ -459,18 +413,6 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
   },
 
-  dayLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#9CA3AF",
-  },
-
-  dayDate: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#6B7280",
-  },
-
   /* TIMELINE */
   timelineContainer: {
     marginLeft: 70,
@@ -494,8 +436,8 @@ const styles = StyleSheet.create({
 
   hourLine: {
     position: "absolute",
-    top: 10,
-    left: 70,
+    top: sizeHelper.calHp(15),
+    left: sizeHelper.calWp(90),
     right: 0,
     height: 1,
     backgroundColor: "#E5E7EB",
@@ -506,7 +448,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    borderRadius: sizeHelper.calWp(40),
+    borderRadius: sizeHelper.calWp(30),
     padding: sizeHelper.calWp(25),
     shadowColor: "#000",
     shadowOpacity: 0.15,
@@ -519,19 +461,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     flex: 1,
-  },
-
-  clientText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-
-  serviceText: {
-    color: "#fff",
-    opacity: 0.9,
-    marginTop: 4,
-    fontSize: 14,
   },
 
   line: {
@@ -552,22 +481,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
-  staffText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
   timeRow: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-end",
     gap: sizeHelper.calWp(13),
     // paddingTop:sizeHelper.calHp(30)
-  },
-
-  timeText: {
-    color: "#fff",
-    fontSize: 13,
   },
 });

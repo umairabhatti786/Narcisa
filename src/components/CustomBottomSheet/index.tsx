@@ -44,7 +44,7 @@ const CustomBottomSheet = (props: any) => {
   return (
     <BottomSheetModal
       ref={bottomSheetModalRef}
-      enableContentPanningGesture={enableContentPanningGesture} // Disable content drag
+      enableContentPanningGesture={false} // Disable content drag
 
   // handleComponent={null} // Remove handle bar
 
@@ -63,8 +63,8 @@ const CustomBottomSheet = (props: any) => {
       }}
     >
       <BottomSheetScrollView 
-    scrollEnabled={scrollEnabled}
-    nestedScrollEnabled={true}
+    scrollEnabled={false}
+   
       showsVerticalScrollIndicator={false}>
         <SafeAreaView>
           <View style={{ paddingBottom: 30 }}>{children}</View>
