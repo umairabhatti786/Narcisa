@@ -3,7 +3,6 @@ import CustomText from "../Text";
 import sizeHelper from "../../utils/Helpers";
 import { useState } from "react";
 import { appStyles } from "../../utils/GlobalStyles";
-import { images } from "../../assets/images";
 import { fonts } from "../../utils/Themes/fonts";
 import { colors } from "../../utils/Themes";
 import { icons } from "../../assets/icons";
@@ -22,9 +21,7 @@ const CustomDateTimePicker = ({
   onActions,
   leftSource,
   tintColor,
-  data,
   error,
-  PickerTitle,
   setIsPickerVisible,
   isPickerVisible,
   onConfirmed,
@@ -98,7 +95,6 @@ const CustomDateTimePicker = ({
 
           <TouchableOpacity
             onPress={() => setIsPickerVisible(!isPickerVisible)}
-            // disabled={!isPickerVisible}
             activeOpacity={0.3}
           >
             <Image
@@ -117,7 +113,6 @@ const CustomDateTimePicker = ({
           <View
             style={{
               marginTop: sizeHelper.calHp(10),
-              // alignItems: "flex-end",
             }}
           >
             <CustomText size={20} text={error} color={colors.red} />
@@ -140,12 +135,9 @@ const CustomDateTimePicker = ({
         }}
         open={isPickerVisible}
         date={date} // Ensure it always shows a valid date
-        // minimumDate={new Date()} // Prevents selecting past dates
         onDateChange={(date) => {
-          console.log("ckdnkdnkdn", date);
         }}
         onConfirm={(selectedDate) => {
-          console.log("Selected Date:", selectedDate);
           setIsPickerVisible(false);
           setDate(selectedDate); // update state
           onConfirmed?.(selectedDate);

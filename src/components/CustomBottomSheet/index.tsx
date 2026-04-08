@@ -45,10 +45,6 @@ const CustomBottomSheet = (props: any) => {
     <BottomSheetModal
       ref={bottomSheetModalRef}
       enableContentPanningGesture={false} // Disable content drag
-
-  // handleComponent={null} // Remove handle bar
-
-      // enableDismissOnClose={false}
       backdropComponent={(props) => (
         <Backdrop {...props} bottomSheetModalRef={bottomSheetModalRef} />
       )}

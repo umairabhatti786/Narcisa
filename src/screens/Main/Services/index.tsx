@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,22 +7,22 @@ import {
   Platform,
   FlatList,
   Alert,
-} from "react-native";
-import ScreenLayout from "../../../components/ScreenLayout";
-import { icons } from "../../../assets/icons";
-import { appStyles } from "../../../utils/GlobalStyles";
-import sizeHelper from "../../../utils/Helpers";
-import { colors } from "../../../utils/Themes";
-import CustomText from "../../../components/Text";
-import { fonts } from "../../../utils/Themes/fonts";
-import HomeHeader from "../../../components/HomeHeader";
-import ServiceCard from "../../../components/ServiceCard";
-import { useSelector } from "react-redux";
-import { getToken } from "../../../redux/reducers/authReducer";
-import { ApiServices } from "../../../api/ApiServices";
-import AddServiceBottomSheet from "./AddServiceBottomSheet";
-import ScreenLoader from "../../../components/ScreenLoader";
-import CustomToast from "../../../components/CustomToast";
+} from 'react-native';
+import ScreenLayout from '../../../components/ScreenLayout';
+import { icons } from '../../../assets/icons';
+import { appStyles } from '../../../utils/GlobalStyles';
+import sizeHelper from '../../../utils/Helpers';
+import { colors } from '../../../utils/Themes';
+import CustomText from '../../../components/Text';
+import { fonts } from '../../../utils/Themes/fonts';
+import HomeHeader from '../../../components/HomeHeader';
+import ServiceCard from '../../../components/ServiceCard';
+import { useSelector } from 'react-redux';
+import { getToken } from '../../../redux/reducers/authReducer';
+import { ApiServices } from '../../../api/ApiServices';
+import AddServiceBottomSheet from './AddServiceBottomSheet';
+import ScreenLoader from '../../../components/ScreenLoader';
+import CustomToast from '../../../components/CustomToast';
 
 const ScheduleScreen = ({ navigation }: any) => {
   const addScheduleSheetRef = useRef<any>(null);
@@ -33,9 +33,10 @@ const ScheduleScreen = ({ navigation }: any) => {
   const [selectedServiceGroup, setSelectedServiceGroup] = useState<any>({});
   const [isServiceModalVisible, setIsServiceModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [toastColor, setToastColor] = useState(colors.red);
   const [isMessage, setIsMessage] = useState(false);
+  const [allServices, setAllServices] = useState();
   useEffect(() => {
     GetServiceGroupData();
     GetServicesData();
@@ -50,10 +51,10 @@ const ScheduleScreen = ({ navigation }: any) => {
       ApiServices.GetServiceGroup(
         token,
         ({ isSuccess, response, status }: any) => {
-          console.log("cdknvkndk", response, status);
+          console.log('cdknvkndk', response, status);
 
           if (!isSuccess) {
-            console.log("Service--------Api--------Error");
+            console.log('Service--------Api--------Error');
             return;
           }
 
@@ -69,7 +70,7 @@ const ScheduleScreen = ({ navigation }: any) => {
         },
       );
     } catch (error) {
-      console.log("Service--------Api--------Error", error);
+      console.log('Service--------Api--------Error', error);
     }
   };
 
@@ -78,14 +79,14 @@ const ScheduleScreen = ({ navigation }: any) => {
 
     try {
       ApiServices.GetServices(token, ({ isSuccess, response, status }: any) => {
-        console.log("cdknvkndk", response, status);
+        console.log('cdknvkndk', response, status);
 
         if (!isSuccess) {
-          console.log("Service--------Api--------Error");
+          console.log('Service--------Api--------Error');
           return;
         }
         if (!response?.success) {
-          setMessage(response?.message?.info || "Something went wrong");
+          setMessage(response?.message?.info || 'Something went wrong');
           setToastColor(colors.red);
           return;
         }
@@ -109,7 +110,7 @@ const ScheduleScreen = ({ navigation }: any) => {
         }
       });
     } catch (error) {
-      console.log("Service--------Api--------Error", error);
+      console.log('Service--------Api--------Error', error);
     }
   };
   const OnDeleteService = (item: any) => {
@@ -124,15 +125,15 @@ const ScheduleScreen = ({ navigation }: any) => {
       ApiServices.DeleteService(
         params,
         ({ isSuccess, response, status }: any) => {
-          console.log("cdknvkndk", response, status);
+          console.log('cdknvkndk', response, status);
           setLoading(false);
 
           if (!isSuccess) {
-            console.log("Service--------Api--------Error");
+            console.log('Service--------Api--------Error');
             return;
           }
           if (!response?.success) {
-            setMessage(response?.message?.info || "Something went wrong");
+            setMessage(response?.message?.info || 'Something went wrong');
             setToastColor(colors.red);
             return;
           }
@@ -150,7 +151,7 @@ const ScheduleScreen = ({ navigation }: any) => {
         },
       );
     } catch (error) {
-      console.log("Service--------Api--------Error", error);
+      console.log('Service--------Api--------Error', error);
     }
   };
 
@@ -181,7 +182,7 @@ const ScheduleScreen = ({ navigation }: any) => {
             }}
           >
             <CustomText
-              text={"Services"}
+              text={'Services'}
               size={28}
               color={colors.black}
               fontFam={fonts.InterTight_Bold}
@@ -200,10 +201,10 @@ const ScheduleScreen = ({ navigation }: any) => {
                   width: sizeHelper.calHp(60),
                   borderRadius: sizeHelper.calWp(30),
                   backgroundColor: colors.primary,
-                  alignItems: "center",
-                  justifyContent: "center",
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   elevation: 8,
-                  shadowColor: "#6F00FF",
+                  shadowColor: '#6F00FF',
                   padding: sizeHelper.calWp(10),
                 }}
               >
@@ -222,7 +223,7 @@ const ScheduleScreen = ({ navigation }: any) => {
 
           <FlatList
             data={serviceGroup}
-            keyExtractor={(item) =>
+            keyExtractor={item =>
               item.id?.toString() || Math.random().toString()
             } // must be unique
             horizontal
@@ -258,7 +259,7 @@ const ScheduleScreen = ({ navigation }: any) => {
         ) : (
           <FlatList
             data={services.filter(
-              (it) => it?.groupId == selectedServiceGroup?.id,
+              it => it?.groupId == selectedServiceGroup?.id,
             )}
             style={{ padding: sizeHelper.calWp(35) }}
             contentContainerStyle={{
@@ -269,16 +270,16 @@ const ScheduleScreen = ({ navigation }: any) => {
               return (
                 <View
                   style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                    paddingTop: "50%",
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: '50%',
                   }}
                 >
                   <CustomText
-                    text={"No Service Are Available"}
+                    text={'No Service Are Available'}
                     color={colors.primary}
                     size={27}
-                    fontWeight={"700"}
+                    fontWeight={'700'}
                     fontFam={fonts.Inter_Bold}
                   />
                 </View>
@@ -291,7 +292,7 @@ const ScheduleScreen = ({ navigation }: any) => {
                   <ServiceCard
                     item={item}
                     onEdit={() => {
-                      console.log("ckdnckdnkcd", item);
+                      console.log('ckdnckdnkcd', item);
                       setSelectedService(item);
                       setIsServiceModalVisible(true);
                     }}
@@ -353,16 +354,16 @@ export default ScheduleScreen;
 
 const styles = StyleSheet.create({
   line: {
-    width: "120%",
+    width: '120%',
     height: 1,
-    alignSelf: "center",
+    alignSelf: 'center',
     backgroundColor: colors.border,
   },
   catagoryButton: {
     height: sizeHelper.calWp(70),
     backgroundColor: colors.light_blue,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: sizeHelper.calWp(20),
     borderRadius: sizeHelper.calWp(40),
     paddingHorizontal: sizeHelper.calWp(30),
